@@ -1,0 +1,17 @@
+From: Acme Industrial Accounts <invoices@acme-industrial.example>
+To: ap@demo-buyer.example
+Subject: Your invoice AC-2026-311 is ready
+Date: Mon, 26 Oct 2026 13:38:00 +0000
+Message-ID:
+ <179467333267.13452.16672022924348909244.demo09@acme-industrial.example>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+
+Hello,
+
+Your invoice AC-2026-311 for PO-1046 is ready. View and download your invoice=
+ here:
+https://portal.acme-industrial.example/inv/AC-2026-311
+
+Acme Industrial Inc.

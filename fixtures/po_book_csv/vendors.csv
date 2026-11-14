@@ -1,0 +1,5 @@
+vendor_id,vendor_name,tax_id,status,billing_email,email_domain,bank_account
+V-NW,Northwind Supply Co.,94-1234567,active,billing@northwind-supply.example,northwind-supply.example,0000007781
+V-GX,Globex Services LLC,36-7654321,active,ar@globex-services.example,globex-services.example,0000002210
+V-AC,Acme Industrial Inc.,27-1111111,active,invoices@acme-industrial.example,acme-industrial.example,0000009034
+V-IN,Initech Office Supplies,51-2223334,active,billing@initech-office.example,initech-office.example,0000004410

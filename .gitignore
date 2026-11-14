@@ -1,0 +1,18 @@
+.venv/
+__pycache__/
+.pytest_cache/
+data/
+web/node_modules/
+web/dist/
+
+.env
+samples/*
+!samples/.gitkeep
+
+# local
+.env.*
+!.env.example
+!.env.mock
+*.db
+*.db-*
+.DS_Store

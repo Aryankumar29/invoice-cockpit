@@ -1,0 +1,19 @@
+po_number,line_no,sku,description,qty_ordered,unit_price,qty_received
+PO-1042,1,WA-10,"Widget A, steel, 10 mm",20,100.00,20
+PO-1042,2,MB-02,Mounting bracket B,40,45.00,40
+PO-1042,3,FK-100,"Fastener kit, 100 pc",10,100.00,10
+PO-1051,1,WA-10,"Widget A, steel, 10 mm",40,100.00,40
+PO-1051,2,WB-12,"Widget B, aluminium, 12 mm",20,100.00,20
+PO-1047,1,SVC-DAY,Implementation consulting (day rate),10,1000.00,10
+PO-1046,1,HH-050,Hydraulic hose assembly 1/2in,30,100.00,30
+PO-1038,1,WA-10,"Widget A, steel, 10 mm",30,100.00,30
+PO-1038,2,FK-100,"Fastener kit, 100 pc",18,100.00,18
+PO-1029,1,WA-10,"Widget A, steel, 10 mm",10,100.00,10
+PO-1060,1,CP-A4,"Copy paper A4, case",50,40.00,50
+PO-1070,1,HH-050,Hydraulic hose assembly 1/2in,10,100.00,10
+PO-1080,1,SVC-DAY,Implementation consulting (day rate),15,1000.00,15
+PO-1090,1,CH-ERG,Ergonomic office chair,12,200.00,12
+PO-1095,1,WA-10,"Widget A, steel, 10 mm",10,100.00,10
+PO-1095,2,MB-02,Mounting bracket B,20,45.00,20
+PO-1095,3,FK-100,"Fastener kit, 100 pc",5,100.00,5
+PO-1095,4,SVC-INST,Installation labour (hours),8,75.00,8

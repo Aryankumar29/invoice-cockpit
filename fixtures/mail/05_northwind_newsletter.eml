@@ -1,0 +1,28 @@
+From: Northwind Supply Co. <news@northwind-supply.example>
+To: ap@demo-buyer.example
+Subject: October product news: new fastener range
+Date: Mon, 26 Oct 2026 11:10:00 +0000
+Message-ID:
+ <179467333265.13452.4189120709660091810.demo05@northwind-supply.example>
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="===============0343368293908501080=="
+
+--===============0343368293908501080==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Our new stainless fastener range is here. Read more on our website.
+
+Unsubscribe: https://northwind-supply.example/unsubscribe
+
+--===============0343368293908501080==
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+
+<html><body><h1>New fastener range</h1><p>Our new stainless range is here.</p=
+><img src=3D'https://northwind-supply.example/banner.png'><p><a href=3D'https=
+://northwind-supply.example/unsubscribe'>Unsubscribe</a></p></body></html>
+
+--===============0343368293908501080==--

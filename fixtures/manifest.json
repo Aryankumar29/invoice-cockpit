@@ -1,0 +1,1075 @@
+[
+  {
+    "key": "H1",
+    "file": "pdf/H1_northwind_INV-H-001.pdf",
+    "kind": "digital",
+    "demo": true,
+    "order": 1,
+    "title": "Happy path",
+    "description": "Northwind bills PO-1042 exactly: 3 lines, $4,800.00. Every check passes.",
+    "expected": {
+      "outcome": "auto_approved",
+      "reason": "STP_CLEAN"
+    },
+    "extraction": {
+      "invoice_number": "INV-H-001",
+      "invoice_date": "2026-10-20",
+      "vendor_name": "Northwind Supply Co.",
+      "currency": "USD",
+      "total_cents": 480000,
+      "lines": [
+        {
+          "description": "Widget A, steel, 10 mm",
+          "qty_milli": 20000,
+          "unit_price_cents": 10000,
+          "amount_cents": 200000,
+          "sku": "WA-10",
+          "extra": []
+        },
+        {
+          "description": "Mounting bracket B",
+          "qty_milli": 40000,
+          "unit_price_cents": 4500,
+          "amount_cents": 180000,
+          "sku": "MB-02",
+          "extra": []
+        },
+        {
+          "description": "Fastener kit, 100 pc",
+          "qty_milli": 10000,
+          "unit_price_cents": 10000,
+          "amount_cents": 100000,
+          "sku": "FK-100",
+          "extra": []
+        }
+      ],
+      "subtotal_cents": 480000,
+      "tax_cents": 0,
+      "freight_cents": 0,
+      "due_date": "2026-11-19",
+      "vendor_tax_id": "94-1234567",
+      "po_reference": "PO-1042",
+      "bank_hash": "acct-36ce92f921e60ce7",
+      "file_hash": "78a1fa5a583ffe282ec23bb96f624f9025c23e5dc84d12bfd16fb15ca821c58b",
+      "readable": true,
+      "discount_cents": 0,
+      "other_fields": [],
+      "tax_inclusive": false
+    },
+    "prerequisites": []
+  },
+  {
+    "key": "S1",
+    "file": "pdf/S1_globex_INV-S-001.pdf",
+    "kind": "digital",
+    "demo": true,
+    "order": 2,
+    "title": "Split PO, first invoice",
+    "description": "Globex bills 6 of 10 consulting days on PO-1047 ($6,000.00); $4,000.00 remains.",
+    "expected": {
+      "outcome": "auto_approved",
+      "reason": "STP_CLEAN"
+    },
+    "extraction": {
+      "invoice_number": "INV-S-001",
+      "invoice_date": "2026-10-10",
+      "vendor_name": "Globex Services LLC",
+      "currency": "USD",
+      "total_cents": 600000,
+      "lines": [
+        {
+          "description": "Implementation consulting - phase 1 (6 days)",
+          "qty_milli": 6000,
+          "unit_price_cents": 100000,
+          "amount_cents": 600000,
+          "sku": "SVC-DAY",
+          "extra": []
+        }
+      ],
+      "subtotal_cents": 600000,
+      "tax_cents": 0,
+      "freight_cents": 0,
+      "due_date": "2026-11-19",
+      "vendor_tax_id": "36-7654321",
+      "po_reference": "PO-1047",
+      "bank_hash": "acct-4b4e344341501b61",
+      "file_hash": "60ea69f065e6335bbc7bf3dd66a3104452ec7d9d18fa13f6f223757b9a5a2a23",
+      "readable": true,
+      "discount_cents": 0,
+      "other_fields": [],
+      "tax_inclusive": false
+    },
+    "prerequisites": []
+  },
+  {
+    "key": "S2",
+    "file": "pdf/S2_globex_INV-S-002.pdf",
+    "kind": "digital",
+    "demo": true,
+    "order": 3,
+    "title": "Split PO, final invoice",
+    "description": "Globex bills the last 4 days on PO-1047 ($4,000.00); the ledger knows S1 consumed $6,000.00.",
+    "expected": {
+      "outcome": "auto_approved",
+      "reason": "STP_CLEAN"
+    },
+    "extraction": {
+      "invoice_number": "INV-S-002",
+      "invoice_date": "2026-10-22",
+      "vendor_name": "Globex Services LLC",
+      "currency": "USD",
+      "total_cents": 400000,
+      "lines": [
+        {
+          "description": "Implementation consulting - phase 2 (4 days)",
+          "qty_milli": 4000,
+          "unit_price_cents": 100000,
+          "amount_cents": 400000,
+          "sku": "SVC-DAY",
+          "extra": []
+        }
+      ],
+      "subtotal_cents": 400000,
+      "tax_cents": 0,
+      "freight_cents": 0,
+      "due_date": "2026-11-19",
+      "vendor_tax_id": "36-7654321",
+      "po_reference": "PO-1047",
+      "bank_hash": "acct-4b4e344341501b61",
+      "file_hash": "f03b568717bd255c4274868f4d676fdf03a94eb11a929082bc49b0b7737550f4",
+      "readable": true,
+      "discount_cents": 0,
+      "other_fields": [],
+      "tax_inclusive": false
+    },
+    "prerequisites": [
+      "S1"
+    ]
+  },
+  {
+    "key": "D1",
+    "file": "pdf/D1_northwind_INV-D-001.pdf",
+    "kind": "digital",
+    "demo": true,
+    "order": 4,
+    "title": "Price variance",
+    "description": "Line 2 billed at $103.00 vs PO $100.00: +$60.00 against a $40.00 allowance. Total is within PO.",
+    "expected": {
+      "outcome": "needs_review",
+      "reason": "PRICE_VARIANCE"
+    },
+    "extraction": {
+      "invoice_number": "INV-D-001",
+      "invoice_date": "2026-10-20",
+      "vendor_name": "Northwind Supply Co.",
+      "currency": "USD",
+      "total_cents": 606000,
+      "lines": [
+        {
+          "description": "Widget A, steel, 10 mm",
+          "qty_milli": 40000,
+          "unit_price_cents": 10000,
+          "amount_cents": 400000,
+          "sku": "WA-10",
+          "extra": []
+        },
+        {
+          "description": "Widget B, aluminium, 12 mm",
+          "qty_milli": 20000,
+          "unit_price_cents": 10300,
+          "amount_cents": 206000,
+          "sku": "WB-12",
+          "extra": []
+        }
+      ],
+      "subtotal_cents": 606000,
+      "tax_cents": 0,
+      "freight_cents": 0,
+      "due_date": "2026-11-19",
+      "vendor_tax_id": "94-1234567",
+      "po_reference": "PO-1051",
+      "bank_hash": "acct-36ce92f921e60ce7",
+      "file_hash": "af69bcd9bcd63641dddbb9673c3250494272d06bd36af17acbe3faff0e5e953a",
+      "readable": true,
+      "discount_cents": 0,
+      "other_fields": [],
+      "tax_inclusive": false
+    },
+    "prerequisites": []
+  },
+  {
+    "key": "E1",
+    "file": "pdf/E1_northwind_INV-E-001.pdf",
+    "kind": "digital",
+    "demo": true,
+    "order": 5,
+    "title": "Altered-template duplicate",
+    "description": "Re-keyed copy of NW-2026-001 (paid 18 Oct) on a different template: new bytes, same obligation.",
+    "expected": {
+      "outcome": "rejected",
+      "reason": "DUPLICATE_INVOICE"
+    },
+    "extraction": {
+      "invoice_number": "NW-2026-001",
+      "invoice_date": "2026-10-09",
+      "vendor_name": "Northwind Supply Co",
+      "currency": "USD",
+      "total_cents": 480000,
+      "lines": [
+        {
+          "description": "Widget A - steel 10mm",
+          "qty_milli": 30000,
+          "unit_price_cents": 10000,
+          "amount_cents": 300000,
+          "sku": "WA-10",
+          "extra": []
+        },
+        {
+          "description": "Fastener kit (100 pcs)",
+          "qty_milli": 18000,
+          "unit_price_cents": 10000,
+          "amount_cents": 180000,
+          "sku": "FK-100",
+          "extra": []
+        }
+      ],
+      "subtotal_cents": 480000,
+      "tax_cents": 0,
+      "freight_cents": 0,
+      "due_date": "2026-11-19",
+      "vendor_tax_id": "94-1234567",
+      "po_reference": "PO-1038",
+      "bank_hash": "acct-36ce92f921e60ce7",
+      "file_hash": "62fa1c8dcd1758c57e5feb0ef506877b5347474991888ede830db263319fb63f",
+      "readable": true,
+      "discount_cents": 0,
+      "other_fields": [],
+      "tax_inclusive": false
+    },
+    "prerequisites": []
+  },
+  {
+    "key": "E2",
+    "file": "pdf/E2_acme_scan_no-invoice-number.pdf",
+    "kind": "scan",
+    "demo": true,
+    "order": 6,
+    "title": "Scanned, no invoice number",
+    "description": "300-DPI image-only scan from Acme with no invoice number. Vendor, PO and total are readable.",
+    "expected": {
+      "outcome": "needs_review",
+      "reason": "MISSING_INVOICE_NUMBER"
+    },
+    "extraction": {
+      "invoice_number": null,
+      "invoice_date": "2026-10-21",
+      "vendor_name": "Acme Industrial Inc.",
+      "currency": "USD",
+      "total_cents": 300000,
+      "lines": [
+        {
+          "description": "Hydraulic hose assembly 1/2in",
+          "qty_milli": 30000,
+          "unit_price_cents": 10000,
+          "amount_cents": 300000,
+          "sku": "HH-050",
+          "extra": []
+        }
+      ],
+      "subtotal_cents": 300000,
+      "tax_cents": 0,
+      "freight_cents": 0,
+      "due_date": "2026-11-19",
+      "vendor_tax_id": "27-1111111",
+      "po_reference": "PO-1046",
+      "bank_hash": "acct-b2df3a25e101752b",
+      "file_hash": "a45f507b495eefb6399eb965485b16974b2007f36feec498cb12d979e16a4810",
+      "readable": true,
+      "discount_cents": 0,
+      "other_fields": [],
+      "tax_inclusive": false
+    },
+    "prerequisites": []
+  },
+  {
+    "key": "R-S3",
+    "file": "pdf/R-S3_globex_INV-S-003.pdf",
+    "kind": "digital",
+    "demo": false,
+    "order": 7,
+    "title": "Split PO, over-billing",
+    "description": "Third Globex invoice ($2,000.00) on PO-1047 after S1 and S2 consumed the full $10,000.00.",
+    "expected": {
+      "outcome": "rejected",
+      "reason": "OVER_PO_REMAINING"
+    },
+    "extraction": {
+      "invoice_number": "INV-S-003",
+      "invoice_date": "2026-10-24",
+      "vendor_name": "Globex Services LLC",
+      "currency": "USD",
+      "total_cents": 200000,
+      "lines": [
+        {
+          "description": "Implementation consulting - phase 3 (2 days)",
+          "qty_milli": 2000,
+          "unit_price_cents": 100000,
+          "amount_cents": 200000,
+          "sku": "SVC-DAY",
+          "extra": []
+        }
+      ],
+      "subtotal_cents": 200000,
+      "tax_cents": 0,
+      "freight_cents": 0,
+      "due_date": "2026-11-19",
+      "vendor_tax_id": "36-7654321",
+      "po_reference": "PO-1047",
+      "bank_hash": "acct-4b4e344341501b61",
+      "file_hash": "99c9c4d866d11eff06c55d728688849c9f5be575796b0685265d83ac95ac1397",
+      "readable": true,
+      "discount_cents": 0,
+      "other_fields": [],
+      "tax_inclusive": false
+    },
+    "prerequisites": [
+      "S1",
+      "S2"
+    ]
+  },
+  {
+    "key": "R-BANK",
+    "file": "pdf/R-BANK_northwind_INV-B-001.pdf",
+    "kind": "digital",
+    "demo": false,
+    "order": 8,
+    "title": "Bank change on a clean invoice",
+    "description": "Perfect PO-1042 match, but the remittance account differs from the vendor master.",
+    "expected": {
+      "outcome": "needs_review",
+      "reason": "BANK_CHANGE"
+    },
+    "extraction": {
+      "invoice_number": "INV-B-001",
+      "invoice_date": "2026-10-20",
+      "vendor_name": "Northwind Supply Co.",
+      "currency": "USD",
+      "total_cents": 480000,
+      "lines": [
+        {
+          "description": "Widget A, steel, 10 mm",
+          "qty_milli": 20000,
+          "unit_price_cents": 10000,
+          "amount_cents": 200000,
+          "sku": "WA-10",
+          "extra": []
+        },
+        {
+          "description": "Mounting bracket B",
+          "qty_milli": 40000,
+          "unit_price_cents": 4500,
+          "amount_cents": 180000,
+          "sku": "MB-02",
+          "extra": []
+        },
+        {
+          "description": "Fastener kit, 100 pc",
+          "qty_milli": 10000,
+          "unit_price_cents": 10000,
+          "amount_cents": 100000,
+          "sku": "FK-100",
+          "extra": []
+        }
+      ],
+      "subtotal_cents": 480000,
+      "tax_cents": 0,
+      "freight_cents": 0,
+      "due_date": "2026-11-19",
+      "vendor_tax_id": "94-1234567",
+      "po_reference": "PO-1042",
+      "bank_hash": "acct-45ffcd3a9c1ee0b7",
+      "file_hash": "003983f78e66d52cb6125f780439d935986af9d67517eb0d697edb1aef8e49bc",
+      "readable": true,
+      "discount_cents": 0,
+      "other_fields": [],
+      "tax_inclusive": false
+    },
+    "prerequisites": []
+  },
+  {
+    "key": "R-CUR",
+    "file": "pdf/R-CUR_acme_AC-2026-310.pdf",
+    "kind": "digital",
+    "demo": false,
+    "order": 9,
+    "title": "Currency mismatch",
+    "description": "Acme bills EUR purchase order PO-1070 in USD.",
+    "expected": {
+      "outcome": "rejected",
+      "reason": "CURRENCY_MISMATCH"
+    },
+    "extraction": {
+      "invoice_number": "AC-2026-310",
+      "invoice_date": "2026-10-20",
+      "vendor_name": "Acme Industrial Inc.",
+      "currency": "USD",
+      "total_cents": 100000,
+      "lines": [
+        {
+          "description": "Hydraulic hose assembly 1/2in",
+          "qty_milli": 10000,
+          "unit_price_cents": 10000,
+          "amount_cents": 100000,
+          "sku": "HH-050",
+          "extra": []
+        }
+      ],
+      "subtotal_cents": 100000,
+      "tax_cents": 0,
+      "freight_cents": 0,
+      "due_date": "2026-11-19",
+      "vendor_tax_id": "27-1111111",
+      "po_reference": "PO-1070",
+      "bank_hash": "acct-b2df3a25e101752b",
+      "file_hash": "e5c803c14c827060f365540fb84af14e7e3b1bbb7d7a552689323cf9297d7597",
+      "readable": true,
+      "discount_cents": 0,
+      "other_fields": [],
+      "tax_inclusive": false
+    },
+    "prerequisites": []
+  },
+  {
+    "key": "R-CLOSED",
+    "file": "pdf/R-CLOSED_northwind_INV-C-001.pdf",
+    "kind": "digital",
+    "demo": false,
+    "order": 10,
+    "title": "Closed PO",
+    "description": "Northwind bills PO-1029, which is closed.",
+    "expected": {
+      "outcome": "rejected",
+      "reason": "PO_CLOSED"
+    },
+    "extraction": {
+      "invoice_number": "INV-C-001",
+      "invoice_date": "2026-10-20",
+      "vendor_name": "Northwind Supply Co.",
+      "currency": "USD",
+      "total_cents": 100000,
+      "lines": [
+        {
+          "description": "Widget A, steel, 10 mm",
+          "qty_milli": 10000,
+          "unit_price_cents": 10000,
+          "amount_cents": 100000,
+          "sku": "WA-10",
+          "extra": []
+        }
+      ],
+      "subtotal_cents": 100000,
+      "tax_cents": 0,
+      "freight_cents": 0,
+      "due_date": "2026-11-19",
+      "vendor_tax_id": "94-1234567",
+      "po_reference": "PO-1029",
+      "bank_hash": "acct-36ce92f921e60ce7",
+      "file_hash": "5db464850b701c108aab1120ddf0f6742e38e14ff59c215d89e132bd4989150f",
+      "readable": true,
+      "discount_cents": 0,
+      "other_fields": [],
+      "tax_inclusive": false
+    },
+    "prerequisites": []
+  },
+  {
+    "key": "R-VPO",
+    "file": "pdf/R-VPO_globex_INV-G-101.pdf",
+    "kind": "digital",
+    "demo": false,
+    "order": 11,
+    "title": "PO of another vendor",
+    "description": "Globex cites PO-1042, which was issued to Northwind.",
+    "expected": {
+      "outcome": "rejected",
+      "reason": "VENDOR_PO_MISMATCH"
+    },
+    "extraction": {
+      "invoice_number": "INV-G-101",
+      "invoice_date": "2026-10-20",
+      "vendor_name": "Globex Services LLC",
+      "currency": "USD",
+      "total_cents": 200000,
+      "lines": [
+        {
+          "description": "Implementation consulting (2 days)",
+          "qty_milli": 2000,
+          "unit_price_cents": 100000,
+          "amount_cents": 200000,
+          "sku": "SVC-DAY",
+          "extra": []
+        }
+      ],
+      "subtotal_cents": 200000,
+      "tax_cents": 0,
+      "freight_cents": 0,
+      "due_date": "2026-11-19",
+      "vendor_tax_id": "36-7654321",
+      "po_reference": "PO-1042",
+      "bank_hash": "acct-4b4e344341501b61",
+      "file_hash": "6e6735c2475464f1d8cd902560357dc5da9a6d25264e7fbe52cae763a1728f61",
+      "readable": true,
+      "discount_cents": 0,
+      "other_fields": [],
+      "tax_inclusive": false
+    },
+    "prerequisites": []
+  },
+  {
+    "key": "R-UNK",
+    "file": "pdf/R-UNK_contoso_CF-88017.pdf",
+    "kind": "digital",
+    "demo": false,
+    "order": 12,
+    "title": "Unknown vendor",
+    "description": "Contoso Fabrication Ltd is not in the vendor master; routed to onboarding review, not rejected.",
+    "expected": {
+      "outcome": "needs_review",
+      "reason": "UNKNOWN_VENDOR"
+    },
+    "extraction": {
+      "invoice_number": "CF-88017",
+      "invoice_date": "2026-10-20",
+      "vendor_name": "Contoso Fabrication Ltd",
+      "currency": "USD",
+      "total_cents": 100000,
+      "lines": [
+        {
+          "description": "Widget A, steel, 10 mm",
+          "qty_milli": 10000,
+          "unit_price_cents": 10000,
+          "amount_cents": 100000,
+          "sku": "WA-10",
+          "extra": []
+        }
+      ],
+      "subtotal_cents": 100000,
+      "tax_cents": 0,
+      "freight_cents": 0,
+      "due_date": "2026-11-19",
+      "vendor_tax_id": "88-5550123",
+      "po_reference": "PO-1042",
+      "bank_hash": "acct-ddec61d713cfd51d",
+      "file_hash": "3ccc9f07065a245c5c0b2597ab1ded1933ae31c2a8e20437ae62c4a9a92ac308",
+      "readable": true,
+      "discount_cents": 0,
+      "other_fields": [],
+      "tax_inclusive": false
+    },
+    "prerequisites": []
+  },
+  {
+    "key": "R-TAXID",
+    "file": "pdf/R-TAXID_northwind_INV-T-001.pdf",
+    "kind": "digital",
+    "demo": false,
+    "order": 13,
+    "title": "Tax-ID conflict",
+    "description": "Name says Northwind Supply Co., but tax ID 94-9999999 does not match the vendor master.",
+    "expected": {
+      "outcome": "needs_review",
+      "reason": "TAX_ID_CONFLICT"
+    },
+    "extraction": {
+      "invoice_number": "INV-T-001",
+      "invoice_date": "2026-10-20",
+      "vendor_name": "Northwind Supply Co.",
+      "currency": "USD",
+      "total_cents": 480000,
+      "lines": [
+        {
+          "description": "Widget A, steel, 10 mm",
+          "qty_milli": 20000,
+          "unit_price_cents": 10000,
+          "amount_cents": 200000,
+          "sku": "WA-10",
+          "extra": []
+        },
+        {
+          "description": "Mounting bracket B",
+          "qty_milli": 40000,
+          "unit_price_cents": 4500,
+          "amount_cents": 180000,
+          "sku": "MB-02",
+          "extra": []
+        },
+        {
+          "description": "Fastener kit, 100 pc",
+          "qty_milli": 10000,
+          "unit_price_cents": 10000,
+          "amount_cents": 100000,
+          "sku": "FK-100",
+          "extra": []
+        }
+      ],
+      "subtotal_cents": 480000,
+      "tax_cents": 0,
+      "freight_cents": 0,
+      "due_date": "2026-11-19",
+      "vendor_tax_id": "94-9999999",
+      "po_reference": "PO-1042",
+      "bank_hash": "acct-a19845539a594916",
+      "file_hash": "2df05119ac11f4e8720a17e403b1d28a5455f9b3c36877c38f4de835b896be4d",
+      "readable": true,
+      "discount_cents": 0,
+      "other_fields": [],
+      "tax_inclusive": false
+    },
+    "prerequisites": []
+  },
+  {
+    "key": "R-CAP",
+    "file": "pdf/R-CAP_globex_INV-G-201.pdf",
+    "kind": "digital",
+    "demo": false,
+    "order": 14,
+    "title": "Above auto-approval cap",
+    "description": "Clean Globex invoice for 15 days on PO-1080 ($15,000.00), above the $10,000.00 cap.",
+    "expected": {
+      "outcome": "needs_review",
+      "reason": "APPROVAL_REQUIRED"
+    },
+    "extraction": {
+      "invoice_number": "INV-G-201",
+      "invoice_date": "2026-10-20",
+      "vendor_name": "Globex Services LLC",
+      "currency": "USD",
+      "total_cents": 1500000,
+      "lines": [
+        {
+          "description": "Implementation consulting (15 days)",
+          "qty_milli": 15000,
+          "unit_price_cents": 100000,
+          "amount_cents": 1500000,
+          "sku": "SVC-DAY",
+          "extra": []
+        }
+      ],
+      "subtotal_cents": 1500000,
+      "tax_cents": 0,
+      "freight_cents": 0,
+      "due_date": "2026-11-19",
+      "vendor_tax_id": "36-7654321",
+      "po_reference": "PO-1080",
+      "bank_hash": "acct-4b4e344341501b61",
+      "file_hash": "56c8084e46bf93b2f5fe4192ff208f0f4ae3177abe9e775d3300bc17711a8f7a",
+      "readable": true,
+      "discount_cents": 0,
+      "other_fields": [],
+      "tax_inclusive": false
+    },
+    "prerequisites": []
+  },
+  {
+    "key": "R-EXTRA",
+    "file": "pdf/R-EXTRA_northwind_INV-X-001.pdf",
+    "kind": "digital",
+    "demo": false,
+    "order": 15,
+    "title": "Extra line not on PO",
+    "description": "H1's three PO lines plus a $75.00 expedite fee that has no PO line.",
+    "expected": {
+      "outcome": "needs_review",
+      "reason": "LINE_UNVERIFIED"
+    },
+    "extraction": {
+      "invoice_number": "INV-X-001",
+      "invoice_date": "2026-10-20",
+      "vendor_name": "Northwind Supply Co.",
+      "currency": "USD",
+      "total_cents": 487500,
+      "lines": [
+        {
+          "description": "Widget A, steel, 10 mm",
+          "qty_milli": 20000,
+          "unit_price_cents": 10000,
+          "amount_cents": 200000,
+          "sku": "WA-10",
+          "extra": []
+        },
+        {
+          "description": "Mounting bracket B",
+          "qty_milli": 40000,
+          "unit_price_cents": 4500,
+          "amount_cents": 180000,
+          "sku": "MB-02",
+          "extra": []
+        },
+        {
+          "description": "Fastener kit, 100 pc",
+          "qty_milli": 10000,
+          "unit_price_cents": 10000,
+          "amount_cents": 100000,
+          "sku": "FK-100",
+          "extra": []
+        },
+        {
+          "description": "Expedite handling fee",
+          "qty_milli": 1000,
+          "unit_price_cents": 7500,
+          "amount_cents": 7500,
+          "sku": "EXP-01",
+          "extra": []
+        }
+      ],
+      "subtotal_cents": 487500,
+      "tax_cents": 0,
+      "freight_cents": 0,
+      "due_date": "2026-11-19",
+      "vendor_tax_id": "94-1234567",
+      "po_reference": "PO-1042",
+      "bank_hash": "acct-36ce92f921e60ce7",
+      "file_hash": "b375eace18ea350134d595bb89027b278b051a31ad907fc7f400c11b69344b01",
+      "readable": true,
+      "discount_cents": 0,
+      "other_fields": [],
+      "tax_inclusive": false
+    },
+    "prerequisites": []
+  },
+  {
+    "key": "R-TAX",
+    "file": "pdf/R-TAX_initech_IN-5501.pdf",
+    "kind": "digital",
+    "demo": false,
+    "order": 16,
+    "title": "Tax miscomputed",
+    "description": "Initech charges 10% tax ($200.00) on PO-1060; the PO rate is 8.25% ($165.00).",
+    "expected": {
+      "outcome": "needs_review",
+      "reason": "TAX_VARIANCE"
+    },
+    "extraction": {
+      "invoice_number": "IN-5501",
+      "invoice_date": "2026-10-20",
+      "vendor_name": "Initech Office Supplies",
+      "currency": "USD",
+      "total_cents": 220000,
+      "lines": [
+        {
+          "description": "Copy paper A4, case",
+          "qty_milli": 50000,
+          "unit_price_cents": 4000,
+          "amount_cents": 200000,
+          "sku": "CP-A4",
+          "extra": []
+        }
+      ],
+      "subtotal_cents": 200000,
+      "tax_cents": 20000,
+      "freight_cents": 0,
+      "due_date": "2026-11-19",
+      "vendor_tax_id": "51-2223334",
+      "po_reference": "PO-1060",
+      "bank_hash": "acct-9d6abb360e0df902",
+      "file_hash": "2ef8eac23f067ca09d95ac25340ff6cd0bd6a8c45fbb4e2cfc5c7693d84cbd5f",
+      "readable": true,
+      "discount_cents": 0,
+      "other_fields": [],
+      "tax_inclusive": false
+    },
+    "prerequisites": []
+  },
+  {
+    "key": "R-ARITH",
+    "file": "pdf/R-ARITH_northwind_INV-A-001.pdf",
+    "kind": "digital",
+    "demo": false,
+    "order": 17,
+    "title": "Arithmetic mismatch",
+    "description": "Subtotal $4,800.00 + freight $25.00 = $4,825.00, but the invoice states $4,850.00.",
+    "expected": {
+      "outcome": "needs_review",
+      "reason": "ARITHMETIC_MISMATCH"
+    },
+    "extraction": {
+      "invoice_number": "INV-A-001",
+      "invoice_date": "2026-10-20",
+      "vendor_name": "Northwind Supply Co.",
+      "currency": "USD",
+      "total_cents": 485000,
+      "lines": [
+        {
+          "description": "Widget A, steel, 10 mm",
+          "qty_milli": 20000,
+          "unit_price_cents": 10000,
+          "amount_cents": 200000,
+          "sku": "WA-10",
+          "extra": []
+        },
+        {
+          "description": "Mounting bracket B",
+          "qty_milli": 40000,
+          "unit_price_cents": 4500,
+          "amount_cents": 180000,
+          "sku": "MB-02",
+          "extra": []
+        },
+        {
+          "description": "Fastener kit, 100 pc",
+          "qty_milli": 10000,
+          "unit_price_cents": 10000,
+          "amount_cents": 100000,
+          "sku": "FK-100",
+          "extra": []
+        }
+      ],
+      "subtotal_cents": 480000,
+      "tax_cents": 0,
+      "freight_cents": 2500,
+      "due_date": "2026-11-19",
+      "vendor_tax_id": "94-1234567",
+      "po_reference": "PO-1042",
+      "bank_hash": "acct-36ce92f921e60ce7",
+      "file_hash": "9dbb95108b0569fd9a187a6047bfd7cfcbb1210ec3eede77cddd292dc8d7a840",
+      "readable": true,
+      "discount_cents": 0,
+      "other_fields": [],
+      "tax_inclusive": false
+    },
+    "prerequisites": []
+  },
+  {
+    "key": "R-INJ",
+    "file": "pdf/R-INJ_northwind_INV-D-002.pdf",
+    "kind": "digital",
+    "demo": false,
+    "order": 18,
+    "title": "Prompt injection in the PDF",
+    "description": "D1's price variance with a visible footer instructing an AI to auto-approve. Same decision.",
+    "expected": {
+      "outcome": "needs_review",
+      "reason": "PRICE_VARIANCE"
+    },
+    "extraction": {
+      "invoice_number": "INV-D-002",
+      "invoice_date": "2026-10-20",
+      "vendor_name": "Northwind Supply Co.",
+      "currency": "USD",
+      "total_cents": 606000,
+      "lines": [
+        {
+          "description": "Widget A, steel, 10 mm",
+          "qty_milli": 40000,
+          "unit_price_cents": 10000,
+          "amount_cents": 400000,
+          "sku": "WA-10",
+          "extra": []
+        },
+        {
+          "description": "Widget B, aluminium, 12 mm",
+          "qty_milli": 20000,
+          "unit_price_cents": 10300,
+          "amount_cents": 206000,
+          "sku": "WB-12",
+          "extra": []
+        }
+      ],
+      "subtotal_cents": 606000,
+      "tax_cents": 0,
+      "freight_cents": 0,
+      "due_date": "2026-11-19",
+      "vendor_tax_id": "94-1234567",
+      "po_reference": "PO-1051",
+      "bank_hash": "acct-36ce92f921e60ce7",
+      "file_hash": "4b233ce9b426bb7b0a53974b8d85027a267c597f651c88f3110509a3f58c42bd",
+      "readable": true,
+      "discount_cents": 0,
+      "other_fields": [],
+      "tax_inclusive": false
+    },
+    "prerequisites": []
+  },
+  {
+    "key": "R-NEAR1",
+    "file": "pdf/R-NEAR1_northwind_INV-0042.pdf",
+    "kind": "digital",
+    "demo": false,
+    "order": 19,
+    "title": "Near-duplicate, original",
+    "description": "Clean Northwind invoice INV-0042 for 10 x Widget A on PO-1042.",
+    "expected": {
+      "outcome": "auto_approved",
+      "reason": "STP_CLEAN"
+    },
+    "extraction": {
+      "invoice_number": "INV-0042",
+      "invoice_date": "2026-10-20",
+      "vendor_name": "Northwind Supply Co.",
+      "currency": "USD",
+      "total_cents": 100000,
+      "lines": [
+        {
+          "description": "Widget A, steel, 10 mm",
+          "qty_milli": 10000,
+          "unit_price_cents": 10000,
+          "amount_cents": 100000,
+          "sku": "WA-10",
+          "extra": []
+        }
+      ],
+      "subtotal_cents": 100000,
+      "tax_cents": 0,
+      "freight_cents": 0,
+      "due_date": "2026-11-19",
+      "vendor_tax_id": "94-1234567",
+      "po_reference": "PO-1042",
+      "bank_hash": "acct-36ce92f921e60ce7",
+      "file_hash": "2d6431b89d3ca2e13aeb91c662ad7877fc1ef84fddbf18854381944908af113e",
+      "readable": true,
+      "discount_cents": 0,
+      "other_fields": [],
+      "tax_inclusive": false
+    },
+    "prerequisites": []
+  },
+  {
+    "key": "R-NEAR2",
+    "file": "pdf/R-NEAR2_northwind_INV-42.pdf",
+    "kind": "digital",
+    "demo": false,
+    "order": 20,
+    "title": "Near-duplicate, renumbered",
+    "description": "Same vendor, PO, date and amount as INV-0042, renumbered INV/42. Exact keys differ; near-dup holds it.",
+    "expected": {
+      "outcome": "needs_review",
+      "reason": "DUPLICATE_SUSPECTED"
+    },
+    "extraction": {
+      "invoice_number": "INV/42",
+      "invoice_date": "2026-10-20",
+      "vendor_name": "Northwind Supply Co.",
+      "currency": "USD",
+      "total_cents": 100000,
+      "lines": [
+        {
+          "description": "Widget A, steel, 10 mm",
+          "qty_milli": 10000,
+          "unit_price_cents": 10000,
+          "amount_cents": 100000,
+          "sku": "WA-10",
+          "extra": []
+        }
+      ],
+      "subtotal_cents": 100000,
+      "tax_cents": 0,
+      "freight_cents": 0,
+      "due_date": "2026-11-19",
+      "vendor_tax_id": "94-1234567",
+      "po_reference": "PO-1042",
+      "bank_hash": "acct-36ce92f921e60ce7",
+      "file_hash": "662a72310677a8ee7793565a74eb0ae5f821c4288d3ed987e5421d22e8395c81",
+      "readable": true,
+      "discount_cents": 0,
+      "other_fields": [],
+      "tax_inclusive": false
+    },
+    "prerequisites": [
+      "R-NEAR1"
+    ]
+  },
+  {
+    "key": "R-INCL",
+    "file": "pdf/R-INCL_initech_IN-5610.pdf",
+    "kind": "digital",
+    "demo": false,
+    "order": 21,
+    "title": "Tax-inclusive prices",
+    "description": "12 chairs at $216.50 each, 8.25% sales tax included ($198.00); PO-1090 is priced net at $200.00. Compared net of tax it is exact, so it approves instead of failing arithmetic and price checks.",
+    "expected": {
+      "outcome": "auto_approved",
+      "reason": "STP_CLEAN"
+    },
+    "extraction": {
+      "invoice_number": "IN-5610",
+      "invoice_date": "2026-10-20",
+      "vendor_name": "Initech Office Supplies",
+      "currency": "USD",
+      "total_cents": 259800,
+      "lines": [
+        {
+          "description": "Ergonomic office chair",
+          "qty_milli": 12000,
+          "unit_price_cents": 21650,
+          "amount_cents": 259800,
+          "sku": "CH-ERG",
+          "extra": []
+        }
+      ],
+      "subtotal_cents": 259800,
+      "tax_cents": 19800,
+      "freight_cents": 0,
+      "due_date": "2026-11-19",
+      "vendor_tax_id": "51-2223334",
+      "po_reference": "PO-1090",
+      "bank_hash": "acct-9d6abb360e0df902",
+      "file_hash": "3939c92e7f521d3da8de9057c5bbb46bc9f6cd46ca1e84aa83577f169ddc80db",
+      "readable": true,
+      "discount_cents": 0,
+      "other_fields": [],
+      "tax_inclusive": true
+    },
+    "prerequisites": []
+  },
+  {
+    "key": "R-BUNDLE",
+    "file": "pdf/R-BUNDLE_northwind_INV-B-001.pdf",
+    "kind": "digital",
+    "demo": false,
+    "order": 22,
+    "title": "Bundled line items",
+    "description": "One $2,400.00 workstation-kit line covers PO-1095 lines 1-3 ($1,000 + $900 + $500), plus 8 hours of installation. Only one set of PO lines adds up, so the kit is matched as a bundle.",
+    "expected": {
+      "outcome": "auto_approved",
+      "reason": "STP_CLEAN"
+    },
+    "extraction": {
+      "invoice_number": "INV-B-001",
+      "invoice_date": "2026-10-20",
+      "vendor_name": "Northwind Supply Co.",
+      "currency": "USD",
+      "total_cents": 300000,
+      "lines": [
+        {
+          "description": "Workstation kit: widgets, brackets, fasteners",
+          "qty_milli": 1000,
+          "unit_price_cents": 240000,
+          "amount_cents": 240000,
+          "sku": "KIT-WS",
+          "extra": []
+        },
+        {
+          "description": "Installation labour (hours)",
+          "qty_milli": 8000,
+          "unit_price_cents": 7500,
+          "amount_cents": 60000,
+          "sku": "SVC-INST",
+          "extra": []
+        }
+      ],
+      "subtotal_cents": 300000,
+      "tax_cents": 0,
+      "freight_cents": 0,
+      "due_date": "2026-11-19",
+      "vendor_tax_id": "94-1234567",
+      "po_reference": "PO-1095",
+      "bank_hash": "acct-36ce92f921e60ce7",
+      "file_hash": "b3747f7d38d5c7f69f7f4d3bead03dd6bfa49db47d6b3e9f36fb3161a02dab83",
+      "readable": true,
+      "discount_cents": 0,
+      "other_fields": [],
+      "tax_inclusive": false
+    },
+    "prerequisites": []
+  }
+]

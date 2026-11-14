@@ -1,0 +1,12 @@
+po_number,vendor_id,vendor_name,buyer_company,currency,status,issued_on,tax_rate_pct,requester
+PO-1042,V-NW,Northwind Supply Co.,Demo Buyer Corp,USD,open,2026-10-01,0,Priya Shah (Operations)
+PO-1051,V-NW,Northwind Supply Co.,Demo Buyer Corp,USD,open,2026-10-05,0,Priya Shah (Operations)
+PO-1047,V-GX,Globex Services LLC,Demo Buyer Corp,USD,open,2026-09-20,0,Dan Ortiz (IT)
+PO-1046,V-AC,Acme Industrial Inc.,Demo Buyer Corp,USD,open,2026-10-02,0,Mei Lin (Maintenance)
+PO-1038,V-NW,Northwind Supply Co.,Demo Buyer Corp,USD,open,2026-09-15,0,Priya Shah (Operations)
+PO-1029,V-NW,Northwind Supply Co.,Demo Buyer Corp,USD,closed,2026-08-01,0,Priya Shah (Operations)
+PO-1060,V-IN,Initech Office Supplies,Demo Buyer Corp,USD,open,2026-10-10,8.25,Sam Cole (Office)
+PO-1070,V-AC,Acme Industrial Inc.,Demo Buyer Corp,EUR,open,2026-10-10,0,Mei Lin (Maintenance)
+PO-1080,V-GX,Globex Services LLC,Demo Buyer Corp,USD,open,2026-10-01,0,Dan Ortiz (IT)
+PO-1090,V-IN,Initech Office Supplies,Demo Buyer Corp,USD,open,2026-10-12,8.25,Sam Cole (Office)
+PO-1095,V-NW,Northwind Supply Co.,Demo Buyer Corp,USD,open,2026-10-12,0,Priya Shah (Operations)
