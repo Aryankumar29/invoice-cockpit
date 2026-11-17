@@ -254,6 +254,8 @@ table.t { width: 100%; border-collapse: collapse; font-size: 13px; }
 .stage.s-failed .stage-icon { background: var(--bad); border-color: var(--bad); color: var(--surface); }
 .stage.s-stopped .stage-icon { border-style: dashed; }
 .stage.s-started .stage-icon { border-color: var(--run); }
+.stage.s-paused .stage-icon { border-color: var(--review); color: var(--review); }
+.pause-mark { width: 7px; height: 9px; border-left: 2px solid currentColor; border-right: 2px solid currentColor; }
 .stage-row { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 11px 0 11px; cursor: default; }
 .stage.expandable .stage-row { cursor: pointer; }
 .stage-row h3 { font-size: 14px; display: flex; align-items: center; gap: 8px; }

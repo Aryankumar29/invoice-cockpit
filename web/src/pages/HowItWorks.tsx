@@ -64,6 +64,7 @@ const STEPS: [string, string][] = [
   ["Lines matched", "Each invoice line paired with a PO line; what was already billed on the PO is counted."],
   ["16 checks", "All 16 checks below run on every invoice, every time."],
   ["Decided", "Auto-approved, needs review, or rejected, with the reason in plain words and a link to the exact line."],
+  ["Waits for a person", "Anything held pauses here, saved. It carries on when a reviewer acts, even after a restart."],
 ];
 
 export default function HowItWorks() {
@@ -125,6 +126,14 @@ export default function HowItWorks() {
               <li>Sending emails to vendors: drafted for you, sent only when you click Send, and only to the address on the vendor list.</li>
               <li>Releasing a held email into the checks.</li>
               <li>The optional investigation assistant can look things up and suggest an action, but cannot approve or change anything.</li>
+            </ul>
+          </Acc>
+          <Acc title="How each invoice runs" sub="A LangGraph graph, saved after every step">
+            <ul className="acc-stack how-list">
+              <li><b>A fixed graph:</b> each invoice is one run through a LangGraph graph of the steps below. Which step comes next is decided by code from the rule results, never by the AI.</li>
+              <li><b>Saved as it goes:</b> the run is saved after every step (SQLite). If the server stops halfway, the invoice carries on from the last finished step instead of starting over.</li>
+              <li><b>Pauses for people:</b> a held invoice stops at the review step and waits. Approve, reject, return or escalate resumes it; above the two-approver limit it waits again for a second person.</li>
+              <li><b>The investigation assistant</b> is its own small graph: the AI picks which read-only lookups to make, then must hand in its findings.</li>
             </ul>
           </Acc>
           <Acc title="Alerts" sub="Slack, or the Notifications tab">

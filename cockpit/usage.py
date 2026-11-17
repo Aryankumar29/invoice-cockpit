@@ -79,3 +79,18 @@ def record_openai(resp, purpose: str) -> dict | None:
                      u.output_tokens or 0, 0, cached, getattr(resp, "_request_id", None) or getattr(resp, "id", None))
     except Exception:
         return None
+
+
+def record_langchain(msg, purpose: str) -> dict | None:
+    """Price one LangChain chat-model reply (either provider). usage_metadata's input_tokens include cache reads
+    and cache writes; split them out so each is priced at its own rate."""
+    try:
+        u = msg.usage_metadata or {}
+        d = u.get("input_token_details") or {}
+        cr, cw = d.get("cache_read", 0) or 0, d.get("cache_creation", 0) or 0
+        meta = msg.response_metadata or {}
+        return _emit(purpose, meta.get("model_name") or meta.get("model") or "",
+                     max((u.get("input_tokens") or 0) - cr - cw, 0), u.get("output_tokens") or 0, cw, cr,
+                     meta.get("id") or getattr(msg, "id", None))
+    except Exception:
+        return None

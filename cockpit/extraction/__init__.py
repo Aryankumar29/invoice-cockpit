@@ -1,13 +1,14 @@
 """Extraction agent A2. The model reads; nothing here decides (docs/DESIGN.md D2-D4).
 
-Chain: [forced replay] -> Claude (retry once, one grounding repair) -> local text/OCR -> replay cache -> unreadable.
+Chain: [forced replay] -> [cache] -> [local first] -> Claude/OpenAI (retry once, one grounding repair) -> local
+text/OCR -> replay cache -> unreadable. The chain is a LangGraph subgraph (cockpit/graph/extraction.py); this module
+holds the readers, the grounding checks and the result type.
 """
 from __future__ import annotations
 
 import json
 import os
 import re
-import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -15,7 +16,7 @@ from pathlib import Path
 from cockpit.core.domain import Invoice, InvoiceLine
 from cockpit.core.normalize import bank_fingerprint
 
-from . import claude, local, openai_llm
+from . import claude, local, openai_llm  # noqa: F401  (local: the readers the ladder graph calls)
 from .parse import currency_of, parse_date, text_amounts, to_cents, to_milli
 
 ARITH_TOL_CENTS = 2
@@ -327,216 +328,10 @@ def _candidate(source, raw, text, file_hash, gtext: str | None = None, corrobora
 
 
 def extract(pdf_bytes: bytes, file_hash: str, filename: str = "", known_vendor=None) -> ExtractionResult:
-    """known_vendor(invoice) -> bool, when given, limits the free local-first path to vendors already in the
+    """Run the extraction ladder (cockpit/graph/extraction.py, a LangGraph subgraph) on one PDF.
+
+    known_vendor(invoice) -> bool, when given, limits the free local-first path to vendors already in the
     vendor master: a new vendor means a template not seen before, which always gets the full model read so that
     every company-specific field is captured."""
-    attempts, warnings, candidates = [], [], []
-    mode = os.environ.get("COCKPIT_EXTRACTION", "auto").lower()
-
-    def step(name, fn):
-        t0 = time.perf_counter()
-        try:
-            ok, detail, out = fn()
-        except Exception as e:  # a broken route is a failed attempt, never a crash
-            ok, detail, out = False, f"{type(e).__name__}: {e}", None
-        attempts.append({"step": name, "ok": ok, "detail": detail, "ms": int((time.perf_counter() - t0) * 1000)})
-        return out
-
-    def done(c: _Candidate, extra=(), notes=()) -> ExtractionResult:
-        return ExtractionResult(c.invoice, c.source, c.grounding, warnings + list(extra) + c.warnings, attempts, c.raw,
-                                list(notes))
-
-    pinfo = step("text_layer", lambda: (True, "", local.page_texts(pdf_bytes))) or []
-    digital = [p for p in pinfo if p["class"] == "digital"]
-    scanned = [p["page"] for p in pinfo if p["class"] != "digital"]
-    text = "\n".join(p["text"] for p in pinfo)       # every visible, readable character: for parsing
-    gtext = "\n".join(p["text"] for p in digital)    # digital pages only: the grounding reference
-    attempts[-1]["detail"] = (f"{len(pinfo)} page(s): " + ", ".join(f"p{p['page']} {p['class']}" for p in pinfo)
-                              + f"; {len(text.strip())} characters")
-    attempts[-1]["pages"] = [{k: p[k] for k in ("page", "class", "metrics", "hidden")} for p in pinfo]
-    for p in pinfo:
-        for why, s in p["hidden"].items():
-            warnings.append(f"Hidden text on page {p['page']} ({why}) was removed before reading: {s[:100]!r}")
-    garbled = [p["page"] for p in pinfo if p["class"] == "garbled"]
-    if garbled:
-        warnings.append(f"Page(s) {', '.join(map(str, garbled))}: the text layer is not real text (unmapped font); "
-                        "treated as scanned.")
-
-    ocr_state: dict = {}
-
-    def ocr_pages():
-        """OCR of the non-digital pages, run once and only when needed. None when there is nothing to OCR."""
-        if "pages" not in ocr_state:
-            ocr_state["pages"] = None
-            if scanned and local.tesseract_available():
-                pages = step("ocr", lambda: (True, "", local.ocr_pages(pdf_bytes, scanned)))
-                if pages:
-                    rot = [f"p{p['page']} {p['rotation']}deg" for p in pages if p["rotation"]]
-                    sk = [f"p{p['page']} {p['skew']:+g}deg" for p in pages if abs(p.get("skew", 0)) >= 0.5]
-                    attempts[-1]["detail"] = (f"{len(pages)} page(s) OCR'd" + (f"; rotated {', '.join(rot)}" if rot else "")
-                                              + (f"; deskewed {', '.join(sk)}" if sk else ""))
-                    ocr_state["pages"] = pages
-        return ocr_state["pages"]
-
-    def ocr_text(mode: str | None = None) -> str:
-        pages = ocr_pages() or []
-        if mode:
-            out = []
-            for p in pages:
-                try:
-                    out.append(p["texts"][mode])
-                except Exception:  # one failed OCR pass drops out of the vote; it never fails the read
-                    pass
-            return "\n".join(out)
-        return "\n".join(t for p in pages for _, t in p["texts"].items())
-
-    def model_candidate(source, raw):
-        corroborate = ocr_text() if digital and scanned else ""
-        c = _candidate(source, raw, text, file_hash, gtext, corroborate)
-        if scanned and ocr_pages():
-            _verify_by_ocr(c.invoice, ocr_text())
-        if scanned and not digital and ocr_pages():
-            x = crosscheck(c.invoice, ocr_text(), c.derived)
-            c.grounding["ocr_crosscheck"] = x
-            if x["disagreed"]:
-                c.warnings.append(f"OCR cross-check: {x['agreed']}/{x['checked']} amounts also read by Tesseract; "
-                                  f"not confirmed: {', '.join(x['disagreed'])}. Compare with the scan.")
-        return c
-
-    def replay():
-        hit = _cache_read(file_hash)
-        if not hit or not isinstance(hit.get("raw"), dict):
-            return False, "no cache entry for this file hash", None
-        c = model_candidate("replay", hit["raw"])
-        c.warnings.insert(0, f"Extraction replayed from cache (recorded {hit.get('saved_at', 'earlier')}); "
-                             "live extraction was not used.")
-        return True, f"cache hit, recorded {hit.get('saved_at')}", c
-
-    if mode == "replay":
-        c = step("replay_forced", replay)
-        if c:
-            return done(c)
-
-    # Local readers: text layer for digital pages, OCR (preprocessing, several layout modes) for the rest
-    has_text = bool(digital)
-
-    def local_text():
-        c = _candidate("local_text", local.parse_text(gtext), gtext, file_hash)
-        detail = "grounded" if c.clean else "; ".join(_problems(c.grounding))
-        if scanned:
-            detail += f"; page(s) {', '.join(map(str, scanned))} not read (no OCR engine)"
-        return c.invoice.readable and c.clean, detail, c if c.invoice.readable else None
-
-    def local_ocr():
-        if not local.tesseract_available():
-            return False, "Tesseract not installed", None
-        if not ocr_pages():
-            return False, "OCR produced no pages", None
-        tried = []
-        for m in local.OCR_MODES:  # every mode reads; the first whose reading reconciles supplies the amounts
-            merged = "\n".join([gtext, ocr_text(m)]).strip()
-            c = _candidate("local_ocr", local.parse_text(merged, ocr=True), merged, file_hash)
-            c.grounding = ground(c.invoice, "", set())  # OCR text is not an independent text layer
-            c.grounding["ocr_mode"] = m
-            c.warnings.insert(0, f"Page(s) {', '.join(map(str, scanned))} read by OCR ({m}); amounts checked by "
-                                 "arithmetic only.")
-            tried.append(c)
-        readable = [c for c in tried if c.invoice.readable]
-        best = next((c for c in readable if c.grounding["arithmetic_ok"]), readable[0] if readable else None)
-        if not best:
-            return False, "nothing readable", None
-        _vote_identifiers(best, readable)
-        _fill_dates(best, readable)
-        ok = best.grounding["arithmetic_ok"]
-        return ok, (f"arithmetic reconciles ({best.grounding['ocr_mode']})" if ok
-                    else "; ".join(best.grounding["arithmetic_problems"])), best
-
-    # API savers (auto mode). 1) The same bytes were already read by the model: reuse that reading, re-checked
-    # against this PDF. 2) A fully digital PDF whose local reading is complete, grounded and reconciles needs
-    # no model call at all. Both fall through to the model when their checks do not pass.
-    auto = mode == "auto"
-    if auto and os.environ.get("COCKPIT_CACHE_FIRST", "1") != "0":
-        hit = _cache_read(file_hash)
-        if hit and hit.get("prompt_version") == prompt_version() and isinstance(hit.get("raw"), dict):
-            c = step("cache", lambda: (lambda c: (c.clean, "earlier model reading of identical bytes; "
-                                                  + ("re-grounded" if c.clean else "; ".join(_problems(c.grounding))), c))(
-                model_candidate("cache", hit["raw"])))
-            if c and c.clean:
-                return done(c, notes=[f"Same file was read by {hit.get('model')} on {hit.get('saved_at')}; that reading "
-                                "was reused and re-checked against this PDF (no API call)."])
-    local_first_tried, local_first_result = False, None
-    if auto and digital and not scanned and os.environ.get("COCKPIT_LOCAL_FIRST", "1") != "0":
-        local_first_tried = True
-        local_first_result = step("local_text", local_text)
-        if (local_first_result and local_first_result.clean and _complete(local_first_result.invoice)
-                and (known_vendor is None or known_vendor(local_first_result.invoice))):
-            return done(local_first_result, notes=["Read by the local parser: every required field present, every amount "
-                                             "found in the PDF text, arithmetic reconciles. No model call needed."])
-
-    # LLM (Claude or OpenAI, whichever key is configured)
-    name, llm = provider()
-    if mode == "local":
-        attempts.append({"step": name or "llm", "ok": False, "detail": "skipped: COCKPIT_EXTRACTION=local", "ms": 0})
-    elif llm is None:
-        attempts.append({"step": "llm", "ok": False, "detail": "skipped: no ANTHROPIC_API_KEY or OPENAI_API_KEY",
-                         "ms": 0})
-        warnings.append("No API key: local extractor used.")
-    else:
-        client = step(f"{name}_client", lambda: (True, "", llm.make_client()))
-
-        def first():
-            raw, note, n = llm.call(client, pdf_bytes)
-            c = model_candidate(name, raw)
-            return c.clean, f"{note}; {n} call(s); " + ("grounded" if c.clean else "; ".join(_problems(c.grounding))), c
-
-        c = step(name, first) if client else None
-        if c and not c.clean:
-            def repair():
-                raw, note, _ = llm.call(client, pdf_bytes, llm.repair_instruction(c.raw, _problems(c.grounding)), 0)
-                r = model_candidate(name, raw)
-                return r.clean, f"{note}; " + ("grounded" if r.clean else "; ".join(_problems(r.grounding))), r
-            r = step(f"{name}_repair", repair)
-            if r and (r.clean or not r.grounding["ungrounded"]):
-                c = r
-            if not c.clean:
-                candidates.append(c)
-        if c and c.clean:
-            err = _cache_write(file_hash, c.raw, name, llm.model() if name == "openai" else llm.MODEL)
-            return done(c, [err] if err else [])
-        if client:
-            warnings.append(f"{PROVIDER_LABEL[name]} extraction did not pass ({attempts[-1]['detail']}); falling back.")
-
-    # Local fallback (or the first reader, see local-first above)
-    if scanned:
-        c = step("local_ocr", local_ocr)
-        if attempts[-1]["detail"] == "Tesseract not installed":
-            warnings.append("Scanned page and no OCR engine available (Tesseract not installed).")
-            c = step("local_text", local_text) if has_text else None
-    else:
-        c = local_first_result if local_first_tried else step("local_text", local_text)
-    if c and (c.clean or c.source == "local_ocr" and c.grounding["arithmetic_ok"]):
-        return done(c)
-    if c:
-        candidates.append(c)
-
-    if mode != "replay":
-        r = step("replay", replay)
-        if r:
-            return done(r)
-
-    # Nothing passed cleanly. A candidate whose every amount is in the document but whose arithmetic fails is
-    # the document's own math: pass it on and let R03 decide. Ungrounded amounts never reach the rules.
-    grounded = [c for c in candidates if not c.grounding["ungrounded"]]
-    if grounded:
-        return done(grounded[0], ["Totals do not reconcile on the document; the rules will decide."])
-    if candidates:
-        c = candidates[0]
-        c.invoice.readable = False
-        return done(c, [f"Extracted amounts not found in the document text ({', '.join(c.grounding['ungrounded'])}); "
-                        "treated as unreadable (fail closed)."])
-    attempts.append({"step": "none", "ok": False, "detail": "every extraction route failed", "ms": 0})
-    inv = Invoice(None, None, None, None, None, file_hash=file_hash, readable=False)
-    g = {"checked": 0, "grounded": 0, "ungrounded": [], "arithmetic_ok": False,
-         "arithmetic_problems": ["nothing extracted"], "text_layer": has_text}
-    return ExtractionResult(inv, "none", g, warnings + ["Document could not be read by any extraction route."],
-                            attempts, {})
+    from cockpit.graph import extraction as ladder
+    return ladder.run(pdf_bytes, file_hash, filename, known_vendor)

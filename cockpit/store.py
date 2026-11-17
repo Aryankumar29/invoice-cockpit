@@ -139,12 +139,15 @@ class Store:
                                    (now(), rid))
             return cur.rowcount == 1
 
-    def requeue_interrupted(self) -> int:
-        """A run that was mid-flight when the process died restarts from scratch (stages are deterministic)."""
+    def requeue_interrupted(self, resumable=None) -> int:
+        """A run that was mid-flight when the process died is queued again. With a saved graph checkpoint
+        (`resumable(run_id)`) it continues from its last completed stage and keeps its events; without one it
+        restarts from scratch (stages are deterministic)."""
         with self._lock:
             ids = [r["id"] for r in self._db.execute("SELECT id FROM runs WHERE status='running'")]
             for rid in ids:
-                self._db.execute("DELETE FROM events WHERE run_id=?", (rid,))
+                if not (resumable and resumable(rid)):
+                    self._db.execute("DELETE FROM events WHERE run_id=?", (rid,))
                 self._db.execute("UPDATE runs SET status='queued' WHERE id=?", (rid,))
             return len(ids)
 

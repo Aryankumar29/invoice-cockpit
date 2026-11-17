@@ -2,7 +2,6 @@
 pipeline, and hold suspicious or unclear emails for a person. Idempotent on Message-ID."""
 from __future__ import annotations
 
-import hashlib
 from pathlib import Path
 from typing import Callable
 
@@ -10,14 +9,8 @@ from .. import sources
 from ..store import Store
 from .connectors import MailboxError, get, status
 from .message import MailMessage, parse_eml
-from .triage import KIND_LABEL, triage
 
 __all__ = ["MailIntake", "MailboxError", "parse_eml", "status"]
-
-# label -> mail status: processed = attachments sent to the pipeline; held = waiting for a person;
-# archived = not an invoice; released / dismissed = a person decided.
-_STATUS = {"invoice": "processed", "suspicious": "held", "unsure": "held", "not_invoice": "archived"}
-
 
 class MailIntake:
     def __init__(self, store: Store, submit: Callable[[str, bytes], dict], records=sources.records,
@@ -25,44 +18,13 @@ class MailIntake:
         self.store, self.submit, self.records, self.on_held = store, submit, records, on_held
         self.dir = Path(store.dir) / "mail"
         self.dir.mkdir(parents=True, exist_ok=True)
+        from ..graph.mail import build
+        self.graph = build(self)
 
     def ingest(self, msg: MailMessage) -> tuple[dict, bool]:
-        """Triage one email. Returns (mail row, is_new)."""
-        existing = self.store.mail(msg.message_id)
-        if existing:
-            return existing, False
-        t = triage(msg, self.records())
-        to_run = {d.filename for d in t.invoice_docs} if t.label == "invoice" else set()
-        atts = []
-        for a in msg.attachments:
-            if not (a.is_document or a.is_risky):
-                continue
-            sha = hashlib.sha256(a.data).hexdigest()
-            if not a.is_risky:
-                (self.dir / f"{sha}.bin").write_bytes(a.data)
-            doc = next((d for d in t.docs if d.filename == a.filename), None)
-            row = {"filename": a.filename, "content_type": a.content_type, "size": len(a.data), "sha256": sha,
-                   "kind": doc.kind if doc else "other", "kind_label": KIND_LABEL.get(doc.kind if doc else "other"),
-                   "run_id": None, "existing": False}
-            if a.filename in to_run:
-                res = self.submit(a.filename, a.data)
-                row["run_id"], row["existing"] = res["run_id"], res["existing"]
-            atts.append(row)
-        if t.label == "invoice" and any(a["existing"] for a in atts):
-            t.reasons.append("The same file was already processed; linked to the earlier run instead of a new one.")
-        mid = self.store.add_mail({
-            "message_id": msg.message_id, "connector": msg.connector, "received_at": msg.received_at,
-            "sender": msg.sender, "sender_name": msg.sender_name, "subject": msg.subject or "(no subject)",
-            "snippet": " ".join(msg.text.split())[:240], "label": t.label, "status": _STATUS[t.label],
-            "reasons": t.reasons, "keys": t.keys, "signals": t.signals, "vendor_id": t.vendor_id,
-            "attachments": atts, "run_ids": [a["run_id"] for a in atts if a["run_id"]]})
-        row = self.store.mail(mid)
-        if row["status"] == "held" and self.on_held:
-            try:
-                self.on_held(row)
-            except Exception:
-                pass
-        return row, True
+        """Triage one email through the mail graph (cockpit/graph/mail.py). Returns (mail row, is_new)."""
+        out = self.graph.invoke({"msg": msg})
+        return (out["existing"], False) if out.get("existing") else (out["row"], True)
 
     def ingest_raw(self, raw: bytes, connector: str = "upload") -> tuple[dict, bool]:
         return self.ingest(parse_eml(raw, connector))

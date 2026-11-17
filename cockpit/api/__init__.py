@@ -22,13 +22,12 @@ from ..mail import MailboxError, MailIntake
 from ..mail import send as mail_send
 from ..mail import status as mailbox_status
 from ..notify import DigestScheduler, Notifier, alerts_enabled, vendor_draft
-from ..pipeline import Pipeline, Worker
+from ..graph.invoice import REVIEW_ACTIONS
+from ..pipeline import NotWaitingForReview, Pipeline, Worker
 from ..settings import SERVICES, Settings
 from ..store import SUMMARY_COLS, Store
 
 ROOT = Path(__file__).resolve().parents[2]
-REVIEW_ACTIONS = ("approve", "reject", "return_to_vendor", "escalate")
-_AFTER = {"reject": "rejected", "return_to_vendor": "returned", "escalate": "needs_review"}
 
 
 class ActionIn(BaseModel):
@@ -132,6 +131,12 @@ def create_app(data_dir: str | os.PathLike | None = None, pipeline: Pipeline | N
             raise HTTPException(404, f"Run {rid} not found")
         return run
 
+    def review_state(rid: str) -> dict:
+        """Whether the run's graph thread is paused at human_review (cockpit/graph/invoice.py)."""
+        ask = pipe.waiting_for_review(rid)
+        return {"waiting": ask is not None, "approvals_given": (ask or {}).get("approvals_given", 0),
+                "dual_control": bool((ask or {}).get("dual_control"))}
+
     def detail(run: dict) -> dict:
         d = run["detail"] or {}
         actions = store.actions(run["id"])
@@ -148,8 +153,9 @@ def create_app(data_dir: str | os.PathLike | None = None, pipeline: Pipeline | N
         out |= {"stages": store.events(run["id"]), "actions": actions, "error": run["error"],
                 "investigation": store.investigation(run["id"]), "mail": _mail_brief(store.mail_for_run(run["id"])),
                 "issues": run_issues.for_run(run),
-                "fixture_key": run["fixture_key"], "allowed_actions": [], "approvals": None}
-        if run["outcome"] == "needs_review":
+                "fixture_key": run["fixture_key"], "allowed_actions": [], "approvals": None,
+                "review_state": review_state(run["id"])}
+        if run["outcome"] == "needs_review" and out["review_state"]["waiting"]:
             approvals = [a for a in actions if a["action"] == "approve"]
             if d.get("dual_control"):
                 out["approvals"] = {"required": 2, "given": len(approvals),
@@ -599,37 +605,30 @@ def create_app(data_dir: str | os.PathLike | None = None, pipeline: Pipeline | N
         reviewer, note = body.reviewer.strip(), body.note.strip()
         if not reviewer or not note:
             raise HTTPException(400, "Reviewer name and a note are required")
-        before = run["outcome"]
-        after = _AFTER.get(body.action, "approved")
-        if body.action == "approve" and (run["detail"] or {}).get("dual_control"):
-            prior = [a for a in store.actions(rid) if a["action"] == "approve"]
-            if any(a["reviewer"].casefold() == reviewer.casefold() for a in prior):
-                raise HTTPException(409, "Dual control: the second approval must come from a different reviewer")
-            if not prior:
-                after = "needs_review"
-        store.add_action(rid, body.action, reviewer, note, before, after)
-        if after != before:
-            store.update_run(rid, outcome=after)
-            if run["prior"]:
-                store.update_run(rid, prior=run["prior"] | {"outcome": after})
+        try:  # the paused graph thread records the action and decides the outcome (graph/invoice.py human_review)
+            pipe.review(rid, body.action, reviewer, note)
+        except NotWaitingForReview:
+            raise HTTPException(409, "This run is not waiting for a reviewer.")
+        except ValueError as e:
+            raise HTTPException(409, str(e))
         return detail(get_run(rid))
 
     @app.post("/api/runs/{rid}/investigate")
     def run_investigate(rid: str):
-        """Exception investigation agent (cockpit/investigate.py). Read-only tools, bounded; advisory only."""
+        """Exception investigation agent (cockpit/graph/investigation.py). Read-only tools, bounded; advisory only."""
         run = get_run(rid)
         if run["status"] != "done" or not run["detail"]:
             raise HTTPException(409, "The run has not finished.")
         if run["outcome"] == "auto_approved":
             raise HTTPException(409, "Nothing to investigate: the invoice was approved automatically.")
-        from ..extraction import provider
-        name, _ = provider()
-        if name != "openai":
-            raise HTTPException(501, "The investigation agent runs on the OpenAI provider; set OPENAI_API_KEY.")
-        from ..investigate import investigate
+        from ..graph.investigation import NoModel, chat_model, investigate
+        try:
+            model = chat_model()
+        except NoModel as e:
+            raise HTTPException(501, str(e))
         token = usage.run_id.set(rid)
         try:
-            result = investigate(detail(run), pipe.context(exclude=rid))
+            result = investigate(detail(run), pipe.context(exclude=rid), model=model)
         except Exception as e:
             raise HTTPException(502, f"Investigation failed: {type(e).__name__}: {str(e)[:200]}")
         finally:
@@ -673,6 +672,7 @@ def create_app(data_dir: str | os.PathLike | None = None, pipeline: Pipeline | N
     @app.post("/api/reset")
     def reset():
         store.reset()
+        pipe.reset()
         return {"ok": True}
 
     _mount_web(app)
