@@ -16,3 +16,4 @@ samples/*
 *.db
 *.db-*
 .DS_Store
+*.tsbuildinfo
