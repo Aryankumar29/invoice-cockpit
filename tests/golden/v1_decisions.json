@@ -1,0 +1,488 @@
+[
+ {
+  "file": "H1_northwind_INV-H-001.pdf",
+  "status": "done",
+  "outcome": "auto_approved",
+  "reasons": [
+   "STP_CLEAN"
+  ],
+  "packet_hash": "0e741af7666e3699dc565dcfbd17e6f4a338a05f5caa6271cb9793b5eb36b515",
+  "extraction_source": "local_text",
+  "stages": [
+   "intake:ok",
+   "extraction:ok",
+   "validation:ok",
+   "vendor:ok",
+   "po:ok",
+   "matching:ok",
+   "policy:ok",
+   "decision:ok",
+   "explanation:ok",
+   "decision:ok"
+  ]
+ },
+ {
+  "file": "S1_globex_INV-S-001.pdf",
+  "status": "done",
+  "outcome": "auto_approved",
+  "reasons": [
+   "STP_CLEAN"
+  ],
+  "packet_hash": "b4f029a3f24f9d2c607ea19a208a5016f4a6e54d35a6cb70be80762f7e3cd56c",
+  "extraction_source": "local_text",
+  "stages": [
+   "intake:ok",
+   "extraction:ok",
+   "validation:ok",
+   "vendor:ok",
+   "po:ok",
+   "matching:ok",
+   "policy:ok",
+   "decision:ok",
+   "explanation:ok",
+   "decision:ok"
+  ]
+ },
+ {
+  "file": "S2_globex_INV-S-002.pdf",
+  "status": "done",
+  "outcome": "auto_approved",
+  "reasons": [
+   "STP_CLEAN"
+  ],
+  "packet_hash": "327dfffa58350330d019fc86f1e71c50dffe6db3d27a13a8aa4c174555bda109",
+  "extraction_source": "local_text",
+  "stages": [
+   "intake:ok",
+   "extraction:ok",
+   "validation:ok",
+   "vendor:ok",
+   "po:ok",
+   "matching:ok",
+   "policy:ok",
+   "decision:ok",
+   "explanation:ok",
+   "decision:ok"
+  ]
+ },
+ {
+  "file": "D1_northwind_INV-D-001.pdf",
+  "status": "done",
+  "outcome": "needs_review",
+  "reasons": [
+   "PRICE_VARIANCE"
+  ],
+  "packet_hash": "8c1a6224821e91f377146fb4402b72c9edc3e52cde75e55a540c940a0f96106f",
+  "extraction_source": "local_text",
+  "stages": [
+   "intake:ok",
+   "extraction:ok",
+   "validation:ok",
+   "vendor:ok",
+   "po:ok",
+   "matching:ok",
+   "policy:warn",
+   "decision:warn",
+   "explanation:ok",
+   "decision:ok"
+  ]
+ },
+ {
+  "file": "E1_northwind_INV-E-001.pdf",
+  "status": "done",
+  "outcome": "rejected",
+  "reasons": [
+   "DUPLICATE_INVOICE",
+   "OVER_PO_REMAINING"
+  ],
+  "packet_hash": "74c08c207795ea41aef398a995ccb5cbfafaaef7067c7a699298944c210f9904",
+  "extraction_source": "local_text",
+  "stages": [
+   "intake:ok",
+   "extraction:ok",
+   "validation:ok",
+   "vendor:ok",
+   "po:ok",
+   "matching:warn",
+   "policy:warn",
+   "decision:stopped",
+   "explanation:ok",
+   "decision:ok"
+  ]
+ },
+ {
+  "file": "E2_acme_scan_no-invoice-number.pdf",
+  "status": "done",
+  "outcome": "needs_review",
+  "reasons": [
+   "MISSING_INVOICE_NUMBER"
+  ],
+  "packet_hash": "8b01ccc5fd1ce6a9a575440df0326e153bae9ecad4db946c7fc1f9dd2d9b9961",
+  "extraction_source": "local_ocr",
+  "stages": [
+   "intake:ok",
+   "extraction:warn",
+   "validation:warn",
+   "vendor:ok",
+   "po:ok",
+   "matching:ok",
+   "policy:warn",
+   "decision:warn",
+   "explanation:ok",
+   "decision:ok"
+  ]
+ },
+ {
+  "file": "R-S3_globex_INV-S-003.pdf",
+  "status": "done",
+  "outcome": "rejected",
+  "reasons": [
+   "OVER_PO_REMAINING"
+  ],
+  "packet_hash": "3c481e675eef0bc3edd0ad1a3368348c1dea57c43812ad489ffdc9a0ee632e38",
+  "extraction_source": "local_text",
+  "stages": [
+   "intake:ok",
+   "extraction:ok",
+   "validation:ok",
+   "vendor:ok",
+   "po:ok",
+   "matching:ok",
+   "policy:warn",
+   "decision:stopped",
+   "explanation:ok",
+   "decision:ok"
+  ]
+ },
+ {
+  "file": "R-BANK_northwind_INV-B-001.pdf",
+  "status": "done",
+  "outcome": "rejected",
+  "reasons": [
+   "OVER_PO_REMAINING"
+  ],
+  "packet_hash": "1e5af58b2bb0397523758c66c6d33ee839196c4bddd651f4e1d92c5677c2065b",
+  "extraction_source": "local_text",
+  "stages": [
+   "intake:ok",
+   "extraction:ok",
+   "validation:ok",
+   "vendor:ok",
+   "po:ok",
+   "matching:warn",
+   "policy:warn",
+   "decision:stopped",
+   "explanation:ok",
+   "decision:ok"
+  ]
+ },
+ {
+  "file": "R-CUR_acme_AC-2026-310.pdf",
+  "status": "done",
+  "outcome": "rejected",
+  "reasons": [
+   "CURRENCY_MISMATCH"
+  ],
+  "packet_hash": "bc3bf481624367cf813b0a9c30542de63e22c48e7e0e89a63e6e0dc7259bb2d4",
+  "extraction_source": "local_text",
+  "stages": [
+   "intake:ok",
+   "extraction:ok",
+   "validation:ok",
+   "vendor:ok",
+   "po:ok",
+   "matching:ok",
+   "policy:warn",
+   "decision:stopped",
+   "explanation:ok",
+   "decision:ok"
+  ]
+ },
+ {
+  "file": "R-CLOSED_northwind_INV-C-001.pdf",
+  "status": "done",
+  "outcome": "rejected",
+  "reasons": [
+   "PO_CLOSED"
+  ],
+  "packet_hash": "d0683da59f082e04d041f27e6f11aeecd286a9cd28409ca51feca8ae75261b87",
+  "extraction_source": "local_text",
+  "stages": [
+   "intake:ok",
+   "extraction:ok",
+   "validation:ok",
+   "vendor:ok",
+   "po:ok",
+   "matching:warn",
+   "policy:warn",
+   "decision:stopped",
+   "explanation:ok",
+   "decision:ok"
+  ]
+ },
+ {
+  "file": "R-VPO_globex_INV-G-101.pdf",
+  "status": "done",
+  "outcome": "rejected",
+  "reasons": [
+   "VENDOR_PO_MISMATCH",
+   "OVER_PO_REMAINING"
+  ],
+  "packet_hash": "14859fca42b5396ccae8747cbcc075f4a368d10c17eed4cd1664778e58f447dd",
+  "extraction_source": "local_text",
+  "stages": [
+   "intake:ok",
+   "extraction:ok",
+   "validation:ok",
+   "vendor:ok",
+   "po:ok",
+   "matching:warn",
+   "policy:warn",
+   "decision:stopped",
+   "explanation:ok",
+   "decision:ok"
+  ]
+ },
+ {
+  "file": "R-UNK_contoso_CF-88017.pdf",
+  "status": "done",
+  "outcome": "rejected",
+  "reasons": [
+   "OVER_PO_REMAINING"
+  ],
+  "packet_hash": "08543e1030ee868c58fbc8a70996696fc4ba75b2ba10926cb00f7071e23b8a9e",
+  "extraction_source": "local_text",
+  "stages": [
+   "intake:ok",
+   "extraction:ok",
+   "validation:ok",
+   "vendor:warn",
+   "po:ok",
+   "matching:ok",
+   "policy:warn",
+   "decision:stopped",
+   "explanation:ok",
+   "decision:ok"
+  ]
+ },
+ {
+  "file": "R-TAXID_northwind_INV-T-001.pdf",
+  "status": "done",
+  "outcome": "rejected",
+  "reasons": [
+   "OVER_PO_REMAINING"
+  ],
+  "packet_hash": "4135167e5a421ce566275a825bf85e2de90b247e400195d1119c3e9bacf09682",
+  "extraction_source": "local_text",
+  "stages": [
+   "intake:ok",
+   "extraction:ok",
+   "validation:ok",
+   "vendor:warn",
+   "po:ok",
+   "matching:warn",
+   "policy:warn",
+   "decision:stopped",
+   "explanation:ok",
+   "decision:ok"
+  ]
+ },
+ {
+  "file": "R-CAP_globex_INV-G-201.pdf",
+  "status": "done",
+  "outcome": "needs_review",
+  "reasons": [
+   "APPROVAL_REQUIRED"
+  ],
+  "packet_hash": "7ef6c00d18f974f64cf29405c5af72bc0e1f3b6a077a5a24a89aeeb2839e2c2d",
+  "extraction_source": "local_text",
+  "stages": [
+   "intake:ok",
+   "extraction:ok",
+   "validation:ok",
+   "vendor:ok",
+   "po:ok",
+   "matching:ok",
+   "policy:warn",
+   "decision:warn",
+   "explanation:ok",
+   "decision:ok"
+  ]
+ },
+ {
+  "file": "R-EXTRA_northwind_INV-X-001.pdf",
+  "status": "done",
+  "outcome": "rejected",
+  "reasons": [
+   "OVER_PO_REMAINING"
+  ],
+  "packet_hash": "4ea018006d3c4276e342cdb4784c6a5c6f9092a7c369bf70d805544f6ebc2548",
+  "extraction_source": "local_text",
+  "stages": [
+   "intake:ok",
+   "extraction:ok",
+   "validation:ok",
+   "vendor:ok",
+   "po:ok",
+   "matching:warn",
+   "policy:warn",
+   "decision:stopped",
+   "explanation:ok",
+   "decision:ok"
+  ]
+ },
+ {
+  "file": "R-TAX_initech_IN-5501.pdf",
+  "status": "done",
+  "outcome": "needs_review",
+  "reasons": [
+   "TAX_VARIANCE"
+  ],
+  "packet_hash": "2a029023624a0702fd77b0844bacb7f3f2815137c9e1576cc1efbc52243a58af",
+  "extraction_source": "local_text",
+  "stages": [
+   "intake:ok",
+   "extraction:ok",
+   "validation:ok",
+   "vendor:ok",
+   "po:ok",
+   "matching:ok",
+   "policy:warn",
+   "decision:warn",
+   "explanation:ok",
+   "decision:ok"
+  ]
+ },
+ {
+  "file": "R-ARITH_northwind_INV-A-001.pdf",
+  "status": "done",
+  "outcome": "rejected",
+  "reasons": [
+   "OVER_PO_REMAINING"
+  ],
+  "packet_hash": "0e923ea2ee4762c357d82ef7abbfad53c40a08a003638d608e079db2f27c745e",
+  "extraction_source": "local_text",
+  "stages": [
+   "intake:ok",
+   "extraction:warn",
+   "validation:warn",
+   "vendor:ok",
+   "po:ok",
+   "matching:warn",
+   "policy:warn",
+   "decision:stopped",
+   "explanation:ok",
+   "decision:ok"
+  ]
+ },
+ {
+  "file": "R-INJ_northwind_INV-D-002.pdf",
+  "status": "done",
+  "outcome": "rejected",
+  "reasons": [
+   "OVER_PO_REMAINING"
+  ],
+  "packet_hash": "4c029105dedb25330ff679be3fff4756eb321d4c15b8bfb7ee28d4a09d38a30c",
+  "extraction_source": "local_text",
+  "stages": [
+   "intake:ok",
+   "extraction:warn",
+   "validation:ok",
+   "vendor:ok",
+   "po:ok",
+   "matching:warn",
+   "policy:warn",
+   "decision:stopped",
+   "explanation:ok",
+   "decision:ok"
+  ]
+ },
+ {
+  "file": "R-NEAR1_northwind_INV-0042.pdf",
+  "status": "done",
+  "outcome": "rejected",
+  "reasons": [
+   "OVER_PO_REMAINING"
+  ],
+  "packet_hash": "66f56b7cbc148bad14df2282d92c767303733f4b0bcd72e370c31a8e62399b35",
+  "extraction_source": "local_text",
+  "stages": [
+   "intake:ok",
+   "extraction:ok",
+   "validation:ok",
+   "vendor:ok",
+   "po:ok",
+   "matching:ok",
+   "policy:warn",
+   "decision:stopped",
+   "explanation:ok",
+   "decision:ok"
+  ]
+ },
+ {
+  "file": "R-NEAR2_northwind_INV-42.pdf",
+  "status": "done",
+  "outcome": "rejected",
+  "reasons": [
+   "OVER_PO_REMAINING"
+  ],
+  "packet_hash": "978906af6eae0e2b85b6a24337a99b3b7aff06076e7d9ebe7c5229d366f006cf",
+  "extraction_source": "local_text",
+  "stages": [
+   "intake:ok",
+   "extraction:ok",
+   "validation:ok",
+   "vendor:ok",
+   "po:ok",
+   "matching:ok",
+   "policy:warn",
+   "decision:stopped",
+   "explanation:ok",
+   "decision:ok"
+  ]
+ },
+ {
+  "file": "R-INCL_initech_IN-5610.pdf",
+  "status": "done",
+  "outcome": "auto_approved",
+  "reasons": [
+   "STP_CLEAN"
+  ],
+  "packet_hash": "8e75b3bf6affe52c77ccdaad9ffa4feaa38b2eec9314e0ffd03c79353debba09",
+  "extraction_source": "local_text",
+  "stages": [
+   "intake:ok",
+   "extraction:warn",
+   "validation:ok",
+   "vendor:ok",
+   "po:ok",
+   "matching:ok",
+   "policy:ok",
+   "decision:ok",
+   "explanation:ok",
+   "decision:ok"
+  ]
+ },
+ {
+  "file": "R-BUNDLE_northwind_INV-B-001.pdf",
+  "status": "done",
+  "outcome": "auto_approved",
+  "reasons": [
+   "STP_CLEAN"
+  ],
+  "packet_hash": "877d5df90526d6da4571d547a729dedba032be439e65851384d7305d9ffb8137",
+  "extraction_source": "local_text",
+  "stages": [
+   "intake:ok",
+   "extraction:ok",
+   "validation:ok",
+   "vendor:ok",
+   "po:ok",
+   "matching:ok",
+   "policy:ok",
+   "decision:ok",
+   "explanation:ok",
+   "decision:ok"
+  ]
+ }
+]

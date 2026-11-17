@@ -22,13 +22,12 @@ from ..mail import MailboxError, MailIntake
 from ..mail import send as mail_send
 from ..mail import status as mailbox_status
 from ..notify import DigestScheduler, Notifier, alerts_enabled, vendor_draft
-from ..pipeline import Pipeline, Worker
+from ..graph.invoice import REVIEW_ACTIONS
+from ..pipeline import NotWaitingForReview, Pipeline, Worker
 from ..settings import SERVICES, Settings
 from ..store import SUMMARY_COLS, Store
 
 ROOT = Path(__file__).resolve().parents[2]
-REVIEW_ACTIONS = ("approve", "reject", "return_to_vendor", "escalate")
-_AFTER = {"reject": "rejected", "return_to_vendor": "returned", "escalate": "needs_review"}
 
 
 class ActionIn(BaseModel):
@@ -599,19 +598,12 @@ def create_app(data_dir: str | os.PathLike | None = None, pipeline: Pipeline | N
         reviewer, note = body.reviewer.strip(), body.note.strip()
         if not reviewer or not note:
             raise HTTPException(400, "Reviewer name and a note are required")
-        before = run["outcome"]
-        after = _AFTER.get(body.action, "approved")
-        if body.action == "approve" and (run["detail"] or {}).get("dual_control"):
-            prior = [a for a in store.actions(rid) if a["action"] == "approve"]
-            if any(a["reviewer"].casefold() == reviewer.casefold() for a in prior):
-                raise HTTPException(409, "Dual control: the second approval must come from a different reviewer")
-            if not prior:
-                after = "needs_review"
-        store.add_action(rid, body.action, reviewer, note, before, after)
-        if after != before:
-            store.update_run(rid, outcome=after)
-            if run["prior"]:
-                store.update_run(rid, prior=run["prior"] | {"outcome": after})
+        try:  # the paused graph thread records the action and decides the outcome (graph/invoice.py human_review)
+            pipe.review(rid, body.action, reviewer, note)
+        except NotWaitingForReview:
+            raise HTTPException(409, "This run is not waiting for a reviewer.")
+        except ValueError as e:
+            raise HTTPException(409, str(e))
         return detail(get_run(rid))
 
     @app.post("/api/runs/{rid}/investigate")
@@ -673,6 +665,7 @@ def create_app(data_dir: str | os.PathLike | None = None, pipeline: Pipeline | N
     @app.post("/api/reset")
     def reset():
         store.reset()
+        pipe.reset()
         return {"ok": True}
 
     _mount_web(app)
