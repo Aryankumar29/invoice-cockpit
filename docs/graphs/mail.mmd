@@ -1,0 +1,24 @@
+---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	seen(seen)
+	triage(triage)
+	file_attachments(file_attachments)
+	record(record)
+	alert(alert)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> seen;
+	file_attachments --> record;
+	record -.-> __end__;
+	record -.-> alert;
+	seen -.-> __end__;
+	seen -.-> triage;
+	triage --> file_attachments;
+	alert --> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2
+	classDef first fill-opacity:0
+	classDef last fill:#bfb6fc

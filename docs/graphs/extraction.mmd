@@ -1,0 +1,48 @@
+---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	text_layer(text_layer)
+	replay_forced(replay_forced)
+	cache(cache)
+	local_first(local_first)
+	llm(llm)
+	llm_repair(llm_repair)
+	llm_accept(llm_accept)
+	llm_fallthrough(llm_fallthrough)
+	local_fallback(local_fallback)
+	replay(replay)
+	settle(settle)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> text_layer;
+	cache -.-> __end__;
+	cache -.-> llm;
+	cache -.-> local_first;
+	llm -.-> llm_accept;
+	llm -.-> llm_fallthrough;
+	llm -.-> llm_repair;
+	llm -.-> local_fallback;
+	llm_fallthrough --> local_fallback;
+	llm_repair -.-> llm_accept;
+	llm_repair -.-> llm_fallthrough;
+	local_fallback -.-> __end__;
+	local_fallback -.-> replay;
+	local_fallback -.-> settle;
+	local_first -.-> __end__;
+	local_first -.-> llm;
+	replay -.-> __end__;
+	replay -.-> settle;
+	replay_forced -.-> __end__;
+	replay_forced -.-> llm;
+	text_layer -.-> cache;
+	text_layer -.-> llm;
+	text_layer -.-> local_first;
+	text_layer -.-> replay_forced;
+	llm_accept --> __end__;
+	settle --> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2
+	classDef first fill-opacity:0
+	classDef last fill:#bfb6fc

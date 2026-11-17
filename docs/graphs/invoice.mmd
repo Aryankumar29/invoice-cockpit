@@ -1,0 +1,50 @@
+---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	intake(intake)
+	extraction(extraction)
+	validation(validation)
+	vendor(vendor)
+	po(po)
+	matching(matching)
+	policy(policy)
+	decision(decision)
+	explanation(explanation)
+	finalize(finalize)
+	failed(failed)
+	investigate(investigate)
+	human_review(human_review)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> intake;
+	decision -.-> explanation;
+	decision -.-> failed;
+	explanation -.-> failed;
+	explanation -.-> finalize;
+	extraction -.-> failed;
+	extraction -.-> validation;
+	finalize -.-> __end__;
+	finalize -.-> human_review;
+	finalize -.-> investigate;
+	human_review -.-> __end__;
+	intake -.-> extraction;
+	intake -.-> failed;
+	investigate --> human_review;
+	matching -.-> failed;
+	matching -.-> policy;
+	po -.-> failed;
+	po -.-> matching;
+	policy -.-> decision;
+	policy -.-> failed;
+	validation -.-> failed;
+	validation -.-> vendor;
+	vendor -.-> failed;
+	vendor -.-> po;
+	failed --> __end__;
+	human_review -.-> human_review;
+	classDef default fill:#f2f0ff,line-height:1.2
+	classDef first fill-opacity:0
+	classDef last fill:#bfb6fc

@@ -1,6 +1,6 @@
 # Invoice Cockpit on LangGraph — Rebuild Plan
 
-Status: proposed, 2026-11-17. Repo: `~/Projects/invoice-cockpit` (public, `main` at `283589f`).
+Status: built 2026-11-17 (v2.0.0). v1 is tagged `v1-pipeline`. See "Changes from the plan" at the end.
 
 ## Goal
 
@@ -113,3 +113,18 @@ D1 rejected LangGraph because "multi-agent frameworks add moving parts with no g
 | SSE regressions | Events still go to the same table; existing SSE tests must pass unchanged |
 | Two SQLite files | Separate `graph.db` avoids locking against `cockpit.db`; both WAL |
 | Scope creep in UI | Only the graph strip; no screen redesign |
+
+## Changes from the plan (as built)
+
+- **Mail fan-out with `Send` dropped.** Parallel branches would submit an email's invoice attachments in a
+  nondeterministic order, and the PO ledger depends on order. The mail graph submits them one after another.
+- **Worker queue kept.** LangGraph has no job queue outside its hosted platform. The serial DB queue stays (it also
+  guarantees ledger order); the checkpointer replaces only the restart-from-scratch recovery.
+- **Events written by the nodes**, and also sent to `get_stream_writer()`, rather than persisted by a stream
+  consumer, so the Live Run screen shows "started" the moment a stage begins.
+- **Old pipeline not kept in `cockpit/legacy/`.** Parity was proven against an export of tag `v1-pipeline` and
+  frozen as `tests/golden/v1_decisions.json`; the test runs whenever Tesseract is available (Docker, or locally).
+- **LangGraph Studio config (`langgraph.json`) not added.** Diagrams are generated from the compiled graphs
+  instead (`scripts/draw_graphs.py` → `docs/graphs/`). Studio needs a LangSmith login to view, so it was left out.
+- **Investigation agent now runs on Claude or OpenAI** (v1 was OpenAI only), through LangChain chat models.
+- **The Live Run graph strip** became one extra timeline row, "Human review", showing the pause and each action.

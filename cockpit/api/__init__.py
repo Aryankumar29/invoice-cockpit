@@ -131,6 +131,12 @@ def create_app(data_dir: str | os.PathLike | None = None, pipeline: Pipeline | N
             raise HTTPException(404, f"Run {rid} not found")
         return run
 
+    def review_state(rid: str) -> dict:
+        """Whether the run's graph thread is paused at human_review (cockpit/graph/invoice.py)."""
+        ask = pipe.waiting_for_review(rid)
+        return {"waiting": ask is not None, "approvals_given": (ask or {}).get("approvals_given", 0),
+                "dual_control": bool((ask or {}).get("dual_control"))}
+
     def detail(run: dict) -> dict:
         d = run["detail"] or {}
         actions = store.actions(run["id"])
@@ -147,8 +153,9 @@ def create_app(data_dir: str | os.PathLike | None = None, pipeline: Pipeline | N
         out |= {"stages": store.events(run["id"]), "actions": actions, "error": run["error"],
                 "investigation": store.investigation(run["id"]), "mail": _mail_brief(store.mail_for_run(run["id"])),
                 "issues": run_issues.for_run(run),
-                "fixture_key": run["fixture_key"], "allowed_actions": [], "approvals": None}
-        if run["outcome"] == "needs_review":
+                "fixture_key": run["fixture_key"], "allowed_actions": [], "approvals": None,
+                "review_state": review_state(run["id"])}
+        if run["outcome"] == "needs_review" and out["review_state"]["waiting"]:
             approvals = [a for a in actions if a["action"] == "approve"]
             if d.get("dual_control"):
                 out["approvals"] = {"required": 2, "given": len(approvals),

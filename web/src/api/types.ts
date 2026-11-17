@@ -84,6 +84,7 @@ export type RunDetail = RunSummary & {
   policy_version: string;
   actions: AuditAction[];
   allowed_actions: string[];
+  review_state?: { waiting: boolean; approvals_given?: number; dual_control?: boolean } | null;
   investigation?: Investigation | null;
   mail?: MailBrief | null;
 };

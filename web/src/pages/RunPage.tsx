@@ -122,7 +122,7 @@ export default function RunPage({ view }: { view: "live" | "review" }) {
                 <h2>Pipeline</h2>
                 <span className="faint" style={{ fontSize: 12, marginLeft: "auto" }}>{events.length} events · policy {detail.policy_version}</span>
               </div>
-              <Timeline events={events} running={running} />
+              <Timeline events={events} running={running} review={detail.review_state} actions={detail.actions} />
             </section>
           </div>
           <section className="panel doc-pane" aria-label="Invoice document">

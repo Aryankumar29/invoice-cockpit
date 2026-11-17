@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { Stage, StageEvent } from "../api/types";
+import type { AuditAction, RunDetail, Stage, StageEvent } from "../api/types";
 import { duration } from "../lib/format";
 import { Icon, KV } from "./ui";
 
@@ -42,7 +42,36 @@ function elapsed(st: StageState, now: number): number | null {
 
 const ICON: Record<string, () => JSX.Element> = { ok: Icon.check, warn: Icon.bang, failed: Icon.cross, stopped: Icon.minus };
 
-export function Timeline({ events, running }: { events: StageEvent[]; running: boolean }) {
+const ACTION_LABEL: Record<string, string> = {
+  approve: "Approved", reject: "Rejected", return_to_vendor: "Returned to vendor", escalate: "Escalated",
+};
+
+/** The graph's human_review step: paused until a reviewer acts, then each action in order. */
+function ReviewStep({ review, actions }: { review?: RunDetail["review_state"]; actions: AuditAction[] }) {
+  const waiting = !!review?.waiting;
+  if (!waiting && actions.length === 0) return null;
+  const last = actions[actions.length - 1];
+  const status = waiting ? "paused" : "ok";
+  const msg = waiting
+    ? review?.dual_control && (review.approvals_given ?? 0) > 0
+      ? `Paused for a second approver (${review.approvals_given} of 2 given).`
+      : "Paused. The run resumes when a reviewer acts."
+    : `${ACTION_LABEL[last.action] ?? last.action} by ${last.reviewer}: ${last.note}`;
+  return (
+    <li className={`stage s-${status} ${waiting ? "" : "done"}`}>
+      <span className="stage-icon">{waiting ? <span className="pause-mark" aria-hidden /> : <Icon.check />}</span>
+      <div className="stage-row">
+        <h3>Human review</h3>
+        <span className="time">{actions.length > 0 ? `${actions.length} action${actions.length === 1 ? "" : "s"}` : ""}</span>
+        <p className="msg">{msg}</p>
+      </div>
+    </li>
+  );
+}
+
+export function Timeline({ events, running, review, actions = [] }: {
+  events: StageEvent[]; running: boolean; review?: RunDetail["review_state"]; actions?: AuditAction[];
+}) {
   const states = stageStates(events);
   const [now, setNow] = useState(Date.now());
   const [open, setOpen] = useState<Set<Stage>>(new Set());
@@ -90,6 +119,7 @@ export function Timeline({ events, running }: { events: StageEvent[]; running: b
           </li>
         );
       })}
+      <ReviewStep review={review} actions={actions} />
     </ol>
   );
 }
