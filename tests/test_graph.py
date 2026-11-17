@@ -175,3 +175,53 @@ def test_reset_drops_every_thread(tmp_path):
     assert pipe.has_checkpoint(rid)
     pipe.reset()
     assert not pipe.has_checkpoint(rid)
+
+
+# --- optional auto-investigation, extraction routes ------------------------------------------------------------
+
+def test_auto_investigation_runs_before_the_pause_and_changes_nothing(tmp_path, monkeypatch):
+    from cockpit.graph import investigation as agent
+    from test_investigate import FINDINGS, call, fake, resp
+    monkeypatch.setenv("COCKPIT_AUTO_INVESTIGATE", "1")
+    model = fake(resp(call("submit_findings", FINDINGS, "c1")))
+    monkeypatch.setattr(agent, "chat_model", lambda: model)
+    pipe = make(tmp_path)
+    rid = submit(pipe, "D1")
+    Worker(pipe).drain()
+    assert pipe.store.investigation(rid)["status"] == "submitted"
+    assert pipe.store.run(rid)["outcome"] == "needs_review" and pipe.waiting_for_review(rid) is not None
+
+
+def test_auto_investigation_without_a_model_still_pauses_for_review(tmp_path, monkeypatch):
+    monkeypatch.setenv("COCKPIT_AUTO_INVESTIGATE", "1")  # no API key in tests
+    pipe = make(tmp_path)
+    rid = submit(pipe, "D1")
+    Worker(pipe).drain()
+    assert pipe.state(rid).values["investigation"]["status"] == "error"
+    assert pipe.waiting_for_review(rid) is not None
+
+
+def test_extraction_routes_are_edges():
+    from cockpit.graph import extraction
+    g = extraction.graph.get_graph()
+    edges = {(e.source, e.target) for e in g.edges}
+    for e in [("text_layer", "cache"), ("cache", "local_first"), ("local_first", "llm"), ("llm", "llm_repair"),
+              ("llm_repair", "llm_accept"), ("llm_repair", "llm_fallthrough"), ("llm_fallthrough", "local_fallback"),
+              ("local_fallback", "replay"), ("replay", "settle"), ("text_layer", "replay_forced")]:
+        assert e in edges, e
+
+
+def test_digital_invoice_without_a_key_takes_the_local_first_route(tmp_path, monkeypatch):
+    from cockpit.extraction import extract
+    monkeypatch.setenv("COCKPIT_REPLAY_DIR", str(tmp_path))
+    pdf = (ROOT / "fixtures" / "pdf" / "H1_northwind_INV-H-001.pdf").read_bytes()
+    r = extract(pdf, "h1")
+    assert r.source == "local_text" and [a["step"] for a in r.attempts] == ["text_layer", "local_text"]
+
+
+def test_mail_graph_holds_before_any_run(tmp_path):
+    from cockpit.mail import MailIntake
+    intake = MailIntake(Store(tmp_path), lambda n, d: {"run_id": "x", "existing": False}, on_held=lambda r: None)
+    edges = {(e.source, e.target) for e in intake.graph.get_graph().edges}
+    assert {("seen", "triage"), ("seen", "__end__"), ("triage", "file_attachments"),
+            ("file_attachments", "record"), ("record", "alert")} <= edges

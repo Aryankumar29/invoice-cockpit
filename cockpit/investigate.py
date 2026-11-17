@@ -1,4 +1,7 @@
-"""Exception investigation agent: the one place the model directs its own steps.
+"""Exception investigation agent, domain half: the read-only tools, the prompt, the case brief and the figure check.
+The agent loop itself is a LangGraph graph in cockpit/graph/investigation.py.
+
+The one place the model directs its own steps.
 
 Runs on demand for an invoice that is not cleanly approved. The model receives the case (decision, failed rules,
 extracted invoice) and chooses which read-only tools to call: purchase order and ledger, vendor master record,
@@ -14,10 +17,8 @@ from __future__ import annotations
 import json
 import os
 import re
-import time
 from datetime import date
 
-from . import usage
 from .core.domain import Context, PriorInvoice
 from .core.resolve import ledger_for
 from .core.rules import money
@@ -26,43 +27,6 @@ MAX_TURNS = int(os.environ.get("COCKPIT_AGENT_MAX_TURNS", "6"))
 TOKEN_BUDGET = int(os.environ.get("COCKPIT_AGENT_TOKEN_BUDGET", "40000"))
 ACTIONS = ("request_credit_note", "return_to_vendor", "approve_with_justification", "hold_for_receipt",
            "verify_bank_change_out_of_band", "escalate", "reject")
-
-_NULLSTR = {"type": ["string", "null"]}
-
-
-def _fn(name: str, description: str, props: dict) -> dict:
-    return {"type": "function", "name": name, "description": description, "strict": True,
-            "parameters": {"type": "object", "properties": props, "required": list(props),
-                           "additionalProperties": False}}
-
-
-TOOLS = [
-    _fn("get_purchase_order", "Purchase order header, its lines (ordered, received, already billed, remaining) and "
-        "the earlier invoices billed against it.", {"po_number": {"type": "string"}}),
-    _fn("get_vendor_record", "Vendor master record by name or tax ID: status, tax ID, whether bank details are on "
-        "file, and the vendor's purchase orders. Returns closest matches when there is no exact one.",
-        {"name_or_tax_id": {"type": "string"}}),
-    _fn("vendor_invoice_history", "Earlier invoices from a vendor (newest first): number, date, total, outcome, PO, "
-        "and per-line quantity, amount and unit price. Use it to see whether a price or pattern is new.",
-        {"vendor_id": {"type": "string"}, "limit": {"type": ["integer", "null"]}}),
-    _fn("search_invoices", "Search all processed invoices by invoice number (punctuation-insensitive, partial), "
-        "and/or total amount (within 1%), optionally for one vendor.",
-        {"invoice_number": _NULLSTR, "amount": _NULLSTR, "vendor_id": _NULLSTR}),
-    _fn("submit_findings", "Finish the investigation. Call exactly once, when you have what you need.", {
-        "summary": {"type": "string", "description": "Two or three sentences for the AP reviewer."},
-        "findings": {"type": "array", "items": {
-            "type": "object", "additionalProperties": False, "required": ["finding", "evidence"],
-            "properties": {"finding": {"type": "string"},
-                           "evidence": {"type": "string", "description": "Which tool result or case fact shows it."}}}},
-        "recommended_action": {"type": "string", "enum": list(ACTIONS)},
-        "confidence": {"type": "string", "enum": ["high", "medium", "low"]},
-        "draft_message": {"type": ["object", "null"], "additionalProperties": False,
-                          "required": ["to", "subject", "body"],
-                          "properties": {"to": {"type": "string"}, "subject": {"type": "string"},
-                                         "body": {"type": "string"}}},
-        "open_questions": {"type": "array", "items": {"type": "string"}},
-    }),
-]
 
 SYSTEM = """You are an accounts-payable exceptions analyst. An invoice was not approved automatically; deterministic \
 rules have already decided that it needs a human. Your job is to investigate why, with the tools, and prepare the \
@@ -223,79 +187,3 @@ def unverified_figures(findings: dict, evidence_text: str) -> list[str]:
             if c is not None and c not in known and -c not in known and tok not in out:
                 out.append(tok)
     return out
-
-
-def _create(client, kw: dict):
-    """Responses call with the extraction module's reasoning-effort handling (dropped for models that reject it)."""
-    import openai
-    from .extraction import openai_llm
-    effort = openai_llm.reasoning_effort()
-    if effort and kw["model"] not in openai_llm._NO_REASONING:
-        try:
-            return client.responses.create(**kw, reasoning={"effort": effort},
-                                           include=["reasoning.encrypted_content"])
-        except openai.BadRequestError as e:
-            if "reasoning" not in str(e).lower() and "include" not in str(e).lower():
-                raise
-            openai_llm._NO_REASONING.add(kw["model"])
-    return client.responses.create(**kw)
-
-
-def investigate(run: dict, ctx: Context, client=None, max_turns: int = MAX_TURNS,
-                token_budget: int = TOKEN_BUDGET) -> dict:
-    """Run the agent loop. Returns the record that is stored and shown: findings, every step, tokens, status."""
-    from .extraction import openai_llm
-    client = client or openai_llm.make_client()
-    tools = Tools(ctx, exclude_run=run.get("id"))
-    case = brief(run)
-    inputs: list = [{"role": "user", "content": case}]
-    steps, evidence, tokens, final, stop, budget_hit = [], [case], 0, None, None, False
-    t0 = time.perf_counter()
-    for turn in range(max_turns):
-        last = turn == max_turns - 1 or tokens >= token_budget * 0.8
-        kw = dict(model=openai_llm.model(), instructions=SYSTEM, input=inputs, tools=TOOLS, store=False,
-                  max_output_tokens=6000, parallel_tool_calls=True,
-                  tool_choice={"type": "function", "name": "submit_findings"} if last else "auto")
-        resp = _create(client, kw)
-        row = usage.record_openai(resp, "investigation") or {}
-        tokens += row.get("input_tokens", 0) + row.get("output_tokens", 0) + row.get("cache_read_tokens", 0)
-        calls = [o for o in (resp.output or []) if getattr(o, "type", None) == "function_call"]
-        inputs.extend(resp.output or [])
-        if not calls:
-            text = getattr(resp, "output_text", "") or ""
-            final = {"summary": text.strip() or "The agent ended without findings.", "findings": [],
-                     "recommended_action": "escalate", "confidence": "low", "draft_message": None,
-                     "open_questions": ["The agent did not submit structured findings."]}
-            stop = "no_submit"
-            break
-        for c in calls:
-            try:
-                args = json.loads(c.arguments or "{}")
-            except ValueError:
-                args = {}
-            if c.name == "submit_findings":
-                final, out = args, {"ok": True}
-            else:
-                t1 = time.perf_counter()
-                out = tools.dispatch(c.name, args)
-                steps.append({"turn": turn + 1, "tool": c.name, "args": args,
-                              "result_preview": json.dumps(out, default=str)[:600],
-                              "ms": round((time.perf_counter() - t1) * 1000)})
-                evidence.append(json.dumps(out, default=str))
-            inputs.append({"type": "function_call_output", "call_id": c.call_id,
-                           "output": json.dumps(out, default=str)})
-        if final is not None:
-            stop = "submitted"
-            break
-        budget_hit = budget_hit or tokens >= token_budget * 0.8
-    if final is None:
-        final = {"summary": "Investigation stopped before findings were submitted.", "findings": [],
-                 "recommended_action": "escalate", "confidence": "low", "draft_message": None,
-                 "open_questions": [f"Stopped: {stop or 'turn limit'}."]}
-        stop = stop or ("token_budget" if budget_hit else "turn_limit")
-    if final.get("recommended_action") not in ACTIONS:
-        final["recommended_action"] = "escalate"
-    return {"status": stop, "budget_reached": budget_hit, "findings": final, "steps": steps,
-            "turns": min(turn + 1, max_turns),
-            "tokens": tokens, "seconds": round(time.perf_counter() - t0, 1), "model": openai_llm.model(),
-            "unverified_figures": unverified_figures(final, "\n".join(evidence))}

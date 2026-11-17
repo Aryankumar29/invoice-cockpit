@@ -608,20 +608,20 @@ def create_app(data_dir: str | os.PathLike | None = None, pipeline: Pipeline | N
 
     @app.post("/api/runs/{rid}/investigate")
     def run_investigate(rid: str):
-        """Exception investigation agent (cockpit/investigate.py). Read-only tools, bounded; advisory only."""
+        """Exception investigation agent (cockpit/graph/investigation.py). Read-only tools, bounded; advisory only."""
         run = get_run(rid)
         if run["status"] != "done" or not run["detail"]:
             raise HTTPException(409, "The run has not finished.")
         if run["outcome"] == "auto_approved":
             raise HTTPException(409, "Nothing to investigate: the invoice was approved automatically.")
-        from ..extraction import provider
-        name, _ = provider()
-        if name != "openai":
-            raise HTTPException(501, "The investigation agent runs on the OpenAI provider; set OPENAI_API_KEY.")
-        from ..investigate import investigate
+        from ..graph.investigation import NoModel, chat_model, investigate
+        try:
+            model = chat_model()
+        except NoModel as e:
+            raise HTTPException(501, str(e))
         token = usage.run_id.set(rid)
         try:
-            result = investigate(detail(run), pipe.context(exclude=rid))
+            result = investigate(detail(run), pipe.context(exclude=rid), model=model)
         except Exception as e:
             raise HTTPException(502, f"Investigation failed: {type(e).__name__}: {str(e)[:200]}")
         finally:
